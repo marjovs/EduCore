@@ -1,0 +1,41 @@
+
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+
+db = SQLAlchemy()
+
+
+def create_app():
+    app = Flask(
+        __name__,
+        template_folder="../../frontend/templates",
+        static_folder="../../frontend/static"
+    )
+
+    app.config.from_object("config.Config")
+
+    db.init_app(app)
+
+    from app.routes.auth_routes import auth
+    from app.routes.secretaria_routes import secretaria
+    from app.routes.aluno_routes import alunos
+    from app.routes.curso_routes import cursos
+    from app.routes.turma_routes import turmas
+    from app.routes.matricula_routes import matriculas
+    from app.routes.frequencia_routes import frequencias
+    from app.routes.nota_routes import notas
+    from app.routes.coordenacao_routes import coordenacao
+    from app.routes.instrutor_routes import instrutor
+
+    app.register_blueprint(auth)
+    app.register_blueprint(secretaria)
+    app.register_blueprint(alunos)
+    app.register_blueprint(cursos)
+    app.register_blueprint(turmas)
+    app.register_blueprint(matriculas)
+    app.register_blueprint(frequencias)
+    app.register_blueprint(notas)
+    app.register_blueprint(coordenacao)
+    app.register_blueprint(instrutor)
+
+    return app

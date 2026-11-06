@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EduCore | Matricular Aluno</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 min-h-screen p-6">
+
+<div class="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow">
+
+<h1 class="text-2xl font-bold text-blue-700 mb-6">
+Realizar Matrícula
+</h1>
+
+{% with mensagens = get_flashed_messages() %}
+{% if mensagens %}
+{% for mensagem in mensagens %}
+<p class="bg-blue-100 text-blue-700 p-3 rounded mb-4">
+{{ mensagem }}
+</p>
+{% endfor %}
+{% endif %}
+{% endwith %}
+
+<form method="POST" class="space-y-4">
+
+<div>
+<label class="block font-medium mb-1">Aluno</label>
+
+<select name="aluno_id" required
+class="w-full border rounded-lg p-3">
+
+<option value="">Selecione um aluno</option>
+
+{% for aluno in alunos %}
+<option value="{{ aluno.id }}">
+{{ aluno.nome }} - {{ aluno.cpf }}
+</option>
+{% endfor %}
+
+</select>
+</div>
+
+<div>
+<label class="block font-medium mb-1">Turma</label>
+
+<select name="turma_id" required
+class="w-full border rounded-lg p-3">
+
+<option value="">Selecione uma turma</option>
+
+{% for turma in turmas %}
+<option value="{{ turma.id }}">
+{{ turma.nome }} - {{ turma.curso.nome }} ({{ turma.ano }})
+</option>
+{% endfor %}
+
+</select>
+</div>
+
+<div class="flex gap-3 pt-4">
+
+<button type="submit"
+class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700">
+Matricular
+</button>
+
+<a href="{{ url_for('matriculas.listar') }}"
+class="bg-gray-200 px-6 py-3 rounded-lg hover:bg-gray-300">
+Voltar
+</a>
+
+</div>
+
+</form>
+
+</div>
+
+</body>
+</html>

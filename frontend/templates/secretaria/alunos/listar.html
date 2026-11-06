@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EduCore | Alunos</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-slate-100 min-h-screen p-6">
+
+<main class="max-w-6xl mx-auto">
+
+<header class="flex justify-between items-center mb-8">
+<div>
+<h1 class="text-3xl font-bold text-gray-800">Alunos</h1>
+<p class="text-gray-500 mt-1">Gerenciamento de alunos</p>
+</div>
+
+<a href="{{ url_for('alunos.cadastrar') }}"
+class="bg-blue-700 text-white px-5 py-3 rounded-lg hover:bg-blue-800">
++ Cadastrar aluno
+</a>
+</header>
+
+{% with mensagens = get_flashed_messages() %}
+{% if mensagens %}
+{% for mensagem in mensagens %}
+<p class="bg-green-100 text-green-700 p-4 rounded-lg mb-4">
+{{ mensagem }}
+</p>
+{% endfor %}
+{% endif %}
+{% endwith %}
+
+<section class="bg-white rounded-xl shadow overflow-x-auto">
+
+<table class="w-full text-left">
+<thead class="bg-blue-50 text-gray-700">
+<tr>
+<th class="p-4">Ações</th>
+<th class="p-4">ID</th>
+<th class="p-4">Nome</th>
+<th class="p-4">E-mail</th>
+<th class="p-4">CPF</th>
+<th class="p-4">Telefone</th>
+</tr>
+</thead>
+
+<tbody>
+{% for aluno in alunos %}
+<tr class="border-t hover:bg-gray-50">
+<td class="p-4">{{ aluno.id }}</td>
+<td class="p-4">{{ aluno.nome }}</td>
+<td class="p-4">{{ aluno.email }}</td>
+<td class="p-4">{{ aluno.cpf }}</td>
+<td class="p-4">{{ aluno.telefone or '-' }}</td>
+<td class="p-4">
+<div class="flex gap-3 items-center">
+<a href="{{ url_for('alunos.editar', id=aluno.id) }}"
+class="text-blue-700 hover:underline font-medium">
+Editar
+</a>
+
+<form method="POST"
+action="{{ url_for('alunos.excluir', id=aluno.id) }}"
+onsubmit="return confirm('Tem certeza que deseja excluir este aluno?');">
+
+<button type="submit"
+class="text-red-600 hover:underline font-medium">
+Excluir
+</button>
+</form>
+</div>
+</td>
+</tr>
+{% else %}
+<tr>
+<td colspan="6" class="p-8 text-center text-gray-500">
+Nenhum aluno cadastrado ainda.
+</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+
+</section>
+
+<a href="{{ url_for('secretaria.painel') }}"
+class="inline-block mt-6 text-blue-700 hover:underline">
+← Voltar ao painel
+</a>
+
+</main>
+
+</body>
+</html>

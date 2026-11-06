@@ -1,23 +1,11 @@
-from flask import Blueprint, render_template, redirect, url_for, session
+from flask import Blueprint, render_template
+
+from app.acesso import perfil_required
 
 instrutor = Blueprint("instrutor", __name__, url_prefix="/instrutor")
 
 
-def instrutor_required():
-    if "usuario" not in session:
-        return redirect(url_for("auth.login"))
-
-    if session.get("perfil") != "instrutor":
-        return redirect(url_for("auth.dashboard"))
-
-    return None
-
-
 @instrutor.route("/painel")
+@perfil_required("instrutor")
 def painel():
-    acesso = instrutor_required()
-
-    if acesso:
-        return acesso
-
     return render_template("instrutor/painel.html")

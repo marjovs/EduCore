@@ -1,22 +1,9 @@
-
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 
-auth = Blueprint("auth", __name__)
+from app.acesso import PERFIS
+from app.models.usuario import Usuario
 
-USUARIOS = {
-    "secretaria@educore.com": {
-        "senha": "012345",
-        "perfil": "secretaria"
-    },
-    "instrutor@educore.com": {
-        "senha": "123456",
-        "perfil": "instrutor"
-    },
-    "coordenacao@educore.com": {
-        "senha": "234567",
-        "perfil": "coordenacao"
-    }
-}
+auth = Blueprint("auth", __name__)
 
 
 @auth.route("/", methods=["GET", "POST"])
@@ -24,20 +11,20 @@ def login():
 
     if request.method == "POST":
 
-        email = request.form.get("email")
-        senha = request.form.get("senha")
+        email = request.form.get("email", "").strip().lower()
+        senha = request.form.get("senha", "")
 
-        usuario = USUARIOS.get(email)
+        usuario = Usuario.query.filter_by(email=email).first()
 
-        if usuario and usuario["senha"] == senha:
+        if usuario and usuario.verificar_senha(senha):
 
-            session["usuario"] = email
-            session["perfil"] = usuario["perfil"]
+            session.clear()
+            session["usuario"] = usuario.email
+            session["perfil"] = usuario.perfil
 
             return redirect(url_for("auth.dashboard"))
 
-        else:
-            flash("E-mail ou senha incorretos.", "danger")
+        flash("E-mail ou senha incorretos.", "danger")
 
     return render_template("auth/login.html")
 
@@ -48,7 +35,11 @@ def dashboard():
     if "usuario" not in session:
         return redirect(url_for("auth.login"))
 
-    perfil = session["perfil"]
+    perfil = session.get("perfil")
+
+    if perfil not in PERFIS:
+        session.clear()
+        return redirect(url_for("auth.login"))
 
     return redirect(url_for(f"{perfil}.painel"))
 

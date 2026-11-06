@@ -1,51 +1,29 @@
-
-from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 from datetime import date
 
+from flask import Blueprint, current_app, flash, redirect, render_template, request, url_for
+from sqlalchemy.exc import SQLAlchemyError
+
 from app import db
-from app.services import matricula_service, aluno_service, turma_service
+from app.acesso import perfil_required
+from app.services import aluno_service, matricula_service, turma_service
 
-matriculas = Blueprint(
-    "matriculas",
-    __name__,
-    url_prefix="/secretaria/matriculas"
-)
-
-
-def secretaria_required():
-    if "usuario" not in session:
-        return redirect(url_for("auth.login"))
-
-    if session.get("perfil") != "secretaria":
-        return redirect(url_for("auth.dashboard"))
-
-    return None
+matriculas = Blueprint("matriculas", __name__, url_prefix="/secretaria/matriculas")
 
 
 @matriculas.route("/")
+@perfil_required("secretaria")
 def listar():
-    acesso = secretaria_required()
-    if acesso:
-        return acesso
-
-    lista_matriculas = matricula_service.listar_matriculas()
-
     return render_template(
         "secretaria/matriculas/listar.html",
-        matriculas=lista_matriculas
+        matriculas=matricula_service.listar_matriculas()
     )
 
 
 @matriculas.route("/cadastrar", methods=["GET", "POST"])
+@perfil_required("secretaria")
 def cadastrar():
-    acesso = secretaria_required()
-    if acesso:
-        return acesso
-
     alunos = aluno_service.listar_alunos()
-
-    turmas = turma_service.listar_turmas()
-    turmas = [turma for turma in turmas if turma.status == "Ativa"]
+    turmas = turma_service.listar_turmas_ativas()
 
     if not alunos:
         flash("Cadastre um aluno antes de realizar uma matrícula.")
@@ -55,91 +33,54 @@ def cadastrar():
         flash("Cadastre uma turma ativa antes de realizar uma matrícula.")
         return redirect(url_for("turmas.listar"))
 
+    def tela():
+        return render_template(
+            "secretaria/matriculas/cadastrar.html",
+            alunos=alunos,
+            turmas=turmas
+        )
+
     if request.method == "POST":
-        aluno_id = request.form.get("aluno_id", "").strip()
-        turma_id = request.form.get("turma_id", "").strip()
-
-        if not aluno_id or not turma_id:
-            flash("Selecione o aluno e a turma.")
-            return render_template(
-                "secretaria/matriculas/cadastrar.html",
-                alunos=alunos,
-                turmas=turmas
-            )
-
         try:
-            aluno_id = int(aluno_id)
-            turma_id = int(turma_id)
+            aluno_id = int(request.form.get("aluno_id", "").strip())
+            turma_id = int(request.form.get("turma_id", "").strip())
         except ValueError:
-            flash("Aluno ou turma inválidos.")
-            return render_template(
-                "secretaria/matriculas/cadastrar.html",
-                alunos=alunos,
-                turmas=turmas
-            )
+            flash("Selecione o aluno e a turma.")
+            return tela()
 
         aluno = aluno_service.buscar_aluno(aluno_id)
         turma = turma_service.buscar_turma(turma_id)
 
         if turma.status != "Ativa":
             flash("Selecione uma turma ativa válida.")
-            return render_template(
-                "secretaria/matriculas/cadastrar.html",
-                alunos=alunos,
-                turmas=turmas
-            )
+            return tela()
 
-        matriculas_existentes = matricula_service.listar_matriculas()
-
-        matricula_existente = any(
-            matricula.aluno_id == aluno.id
-            and matricula.turma_id == turma.id
-            and matricula.status == "Ativa"
-            for matricula in matriculas_existentes
-        )
-
-        if matricula_existente:
+        if matricula_service.existe_matricula_ativa(aluno.id, turma.id):
             flash("Este aluno já possui matrícula ativa nesta turma.")
-            return render_template(
-                "secretaria/matriculas/cadastrar.html",
-                alunos=alunos,
-                turmas=turmas
-            )
-
-        dados = {
-            "aluno_id": aluno.id,
-            "turma_id": turma.id,
-            "data_matricula": date.today(),
-            "status": "Ativa"
-        }
+            return tela()
 
         try:
-            matricula_service.cadastrar_matricula(dados)
-        except Exception:
+            matricula_service.cadastrar_matricula({
+                "aluno_id": aluno.id,
+                "turma_id": turma.id,
+                "data_matricula": date.today(),
+                "status": "Ativa"
+            })
+        except SQLAlchemyError:
             db.session.rollback()
+            current_app.logger.exception("Erro ao realizar matrícula")
             flash("Erro ao realizar matrícula.")
-            return render_template(
-                "secretaria/matriculas/cadastrar.html",
-                alunos=alunos,
-                turmas=turmas
-            )
+            return tela()
 
         flash("Matrícula realizada com sucesso!")
         return redirect(url_for("matriculas.listar"))
 
-    return render_template(
-        "secretaria/matriculas/cadastrar.html",
-        alunos=alunos,
-        turmas=turmas
-    )
+    return tela()
 
 
 @matriculas.route("/cancelar/<int:id>", methods=["POST"])
+@perfil_required("secretaria")
 def cancelar(id):
-    acesso = secretaria_required()
-    if acesso:
-        return acesso
-
     matricula = matricula_service.buscar_matricula(id)
 
     if matricula.status == "Cancelada":
@@ -148,8 +89,9 @@ def cancelar(id):
 
     try:
         matricula_service.cancelar_matricula(matricula)
-    except Exception:
+    except SQLAlchemyError:
         db.session.rollback()
+        current_app.logger.exception("Erro ao cancelar matrícula")
         flash("Erro ao cancelar matrícula.")
         return redirect(url_for("matriculas.listar"))
 

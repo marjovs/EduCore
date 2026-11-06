@@ -1,47 +1,51 @@
+from sqlalchemy.orm import joinedload
+
 from app import db
 from app.models.frequencia import Frequencia
+from app.models.matricula import Matricula
+from app.models.turma import Turma
 
 
 def listar_frequencias():
-    return Frequencia.query.order_by(Frequencia.data.desc()).all()
-
-
-def buscar_frequencia(frequencia_id):
-    return Frequencia.query.get_or_404(frequencia_id)
-
-
-def buscar_frequencia_por_data(matricula_id, data):
-    return Frequencia.query.filter_by(
-        matricula_id=matricula_id,
-        data=data
-    ).first()
-
-
-def registrar_frequencia(dados):
-    frequencia = Frequencia(
-        matricula_id=dados["matricula_id"],
-        data=dados["data"],
-        status=dados["status"],
-        observacao=dados.get("observacao")
+    return (
+        Frequencia.query
+        .options(
+            joinedload(Frequencia.matricula).joinedload(Matricula.aluno),
+            joinedload(Frequencia.matricula)
+            .joinedload(Matricula.turma)
+            .joinedload(Turma.curso),
+        )
+        .order_by(Frequencia.data.desc())
+        .all()
     )
 
-    db.session.add(frequencia)
-    db.session.commit()
 
-    return frequencia
+def registrar_frequencias(lista_dados, data):
+    """Grava (ou atualiza) a frequência de vários alunos numa única transação.
 
+    lista_dados: [{"matricula_id": int, "status": "Presente" ou "Falta"}, ...]
+    """
+    ids = [dados["matricula_id"] for dados in lista_dados]
 
-def atualizar_frequencia(frequencia, dados):
-    frequencia.status = dados["status"]
+    existentes = {
+        frequencia.matricula_id: frequencia
+        for frequencia in Frequencia.query.filter(
+            Frequencia.matricula_id.in_(ids),
+            Frequencia.data == data
+        )
+    }
 
-    if "observacao" in dados:
-        frequencia.observacao = dados["observacao"]
+    for dados in lista_dados:
+        frequencia = existentes.get(dados["matricula_id"])
 
-    db.session.commit()
+        if frequencia:
+            frequencia.status = dados["status"]
+        else:
+            db.session.add(Frequencia(
+                matricula_id=dados["matricula_id"],
+                data=data,
+                status=dados["status"],
+                observacao=dados.get("observacao")
+            ))
 
-    return frequencia
-
-
-def excluir_frequencia(frequencia):
-    db.session.delete(frequencia)
     db.session.commit()

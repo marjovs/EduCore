@@ -1,98 +1,72 @@
-from flask import Blueprint, render_template, redirect, url_for, session
+from flask import Blueprint, render_template
+from sqlalchemy import func, select
+
 from app import db
+from app.acesso import perfil_required
 from app.models.aluno import Aluno
+from app.models.frequencia import Frequencia
 from app.models.matricula import Matricula
 from app.models.nota import Nota
-from app.models.frequencia import Frequencia
+from app.services import aluno_service, frequencia_service, matricula_service, nota_service
 
 coordenacao = Blueprint("coordenacao", __name__, url_prefix="/coordenacao")
 
 
-def coordenacao_required():
-    if "usuario" not in session:
-        return redirect(url_for("auth.login"))
-
-    if session.get("perfil") != "coordenacao":
-        return redirect(url_for("auth.dashboard"))
-
-    return None
-
-
 @coordenacao.route("/painel")
+@perfil_required("coordenacao")
 def painel():
-    acesso = coordenacao_required()
-    if acesso:
-        return acesso
-    
-    total_alunos = Aluno.query.count()
-    total_matriculas = Matricula.query.filter_by(status="Ativa").count()
-    total_notas = Nota.query.count()
-    total_frequencias = Frequencia.query.count()
+    # Uma única ida ao banco para os 4 indicadores (cada consulta ao Neon
+    # custa uma viagem de rede).
+    totais = db.session.execute(
+        select(
+            select(func.count(Aluno.id)).scalar_subquery(),
+            select(func.count(Matricula.id))
+            .where(Matricula.status == "Ativa").scalar_subquery(),
+            select(func.count(Nota.id)).scalar_subquery(),
+            select(func.count(Frequencia.id)).scalar_subquery(),
+        )
+    ).one()
 
     return render_template(
-        "coordenacao/painel.html", 
-        total_alunos=total_alunos,
-        total_matriculas=total_matriculas, 
-        total_notas=total_notas, 
-        total_frequencias=total_frequencias
+        "coordenacao/painel.html",
+        total_alunos=totais[0],
+        total_matriculas=totais[1],
+        total_notas=totais[2],
+        total_frequencias=totais[3]
     )
 
 
 @coordenacao.route("/alunos")
+@perfil_required("coordenacao")
 def alunos():
-    acesso = coordenacao_required()
-    if acesso:
-        return acesso
-    
-    lista_alunos = Aluno.query.order_by(Aluno.nome).all()
-
     return render_template(
         "coordenacao/alunos.html",
-        alunos=lista_alunos
+        alunos=aluno_service.listar_alunos()
     )
 
 
 @coordenacao.route("/matriculas")
+@perfil_required("coordenacao")
 def matriculas():
-    acesso = coordenacao_required()
-    if acesso:
-        return acesso
-
-    lista_matriculas = Matricula.query.order_by(
-        Matricula.data_matricula.desc()
-    ).all()
-
     return render_template(
         "coordenacao/matriculas.html",
-        matriculas=lista_matriculas
+        matriculas=matricula_service.listar_matriculas()
     )
 
 
 @coordenacao.route("/desempenho")
+@perfil_required("coordenacao")
 def desempenho():
-    acesso = coordenacao_required()
-    if acesso:
-        return acesso
-
-    lista_notas = Nota.query.order_by(Nota.data.desc()).all()
-
     return render_template(
         "coordenacao/desempenho.html",
-        notas=lista_notas
+        notas=nota_service.listar_notas()
     )
 
 
 @coordenacao.route("/frequencia")
+@perfil_required("coordenacao")
 def frequencia():
-    acesso = coordenacao_required()
-    if acesso:
-        return acesso
-
-    lista_frequencias = Frequencia.query.order_by(
-        Frequencia.data.desc()
-        ).all()
-
     return render_template(
         "coordenacao/frequencia.html",
-        frequencias=lista_frequencias
+        frequencias=frequencia_service.listar_frequencias()
     )

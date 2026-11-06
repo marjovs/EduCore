@@ -1,69 +1,68 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 from datetime import datetime
 
-from app.services import aluno_service
+from flask import Blueprint, current_app, flash, redirect, render_template, request, url_for
+from sqlalchemy.exc import SQLAlchemyError
 
+from app import db
+from app.acesso import perfil_required
+from app.services import RegraNegocioError, aluno_service
 
 alunos = Blueprint("alunos", __name__, url_prefix="/secretaria/alunos")
 
 
-def secretaria_required():
-    return (
-        "usuario" in session
-        and session.get("perfil") == "secretaria"
-    )
+def _ler_formulario():
+    """Lê e valida o formulário. Retorna (dados, erro)."""
+    nome = request.form.get("nome", "").strip()
+    email = request.form.get("email", "").strip()
+    cpf = request.form.get("cpf", "").strip()
+    telefone = request.form.get("telefone", "").strip()
+    nascimento = request.form.get("data_nascimento", "")
+
+    if not all([nome, email, cpf, nascimento]):
+        return None, "Preencha todos os campos obrigatórios."
+
+    try:
+        data_nascimento = datetime.strptime(nascimento, "%Y-%m-%d").date()
+    except ValueError:
+        return None, "Data de nascimento inválida."
+
+    return {
+        "nome": nome,
+        "email": email,
+        "cpf": cpf,
+        "telefone": telefone or None,
+        "data_nascimento": data_nascimento
+    }, None
 
 
 @alunos.route("/")
+@perfil_required("secretaria")
 def listar():
-    if not secretaria_required():
-        return redirect(url_for("auth.login"))
-
-    lista_alunos = aluno_service.listar_alunos()
-
     return render_template(
         "secretaria/alunos/listar.html",
-        alunos=lista_alunos
+        alunos=aluno_service.listar_alunos()
     )
 
 
 @alunos.route("/cadastrar", methods=["GET", "POST"])
+@perfil_required("secretaria")
 def cadastrar():
-    if not secretaria_required():
-        return redirect(url_for("auth.login"))
-
     if request.method == "POST":
-        nome = request.form.get("nome", "").strip()
-        email = request.form.get("email", "").strip()
-        cpf = request.form.get("cpf", "").strip()
-        telefone = request.form.get("telefone", "").strip()
-        nascimento = request.form.get("data_nascimento", "")
+        dados, erro = _ler_formulario()
 
-        if not all([nome, email, cpf, nascimento]):
-            flash("Preencha todos os campos obrigatórios.")
+        if erro:
+            flash(erro)
             return render_template("secretaria/alunos/cadastrar.html")
-
-        try:
-            data_nascimento = datetime.strptime(
-                nascimento, "%Y-%m-%d"
-            ).date()
-        except ValueError:
-            flash("Data de nascimento inválida.")
-            return render_template("secretaria/alunos/cadastrar.html")
-
-        dados = {
-            "nome": nome,
-            "email": email,
-            "cpf": cpf,
-            "telefone": telefone or None,
-            "data_nascimento": data_nascimento
-        }
 
         try:
             aluno_service.cadastrar_aluno(dados)
-        except Exception:
-            from app import db
+        except RegraNegocioError as e:
             db.session.rollback()
+            flash(str(e))
+            return render_template("secretaria/alunos/cadastrar.html")
+        except SQLAlchemyError:
+            db.session.rollback()
+            current_app.logger.exception("Erro ao cadastrar aluno")
             flash("Erro ao cadastrar aluno. Verifique os dados.")
             return render_template("secretaria/alunos/cadastrar.html")
 
@@ -74,77 +73,48 @@ def cadastrar():
 
 
 @alunos.route("/editar/<int:id>", methods=["GET", "POST"])
+@perfil_required("secretaria")
 def editar(id):
-    if not secretaria_required():
-        return redirect(url_for("auth.login"))
-
     aluno = aluno_service.buscar_aluno(id)
 
     if request.method == "POST":
-        nome = request.form.get("nome", "").strip()
-        email = request.form.get("email", "").strip()
-        cpf = request.form.get("cpf", "").strip()
-        telefone = request.form.get("telefone", "").strip()
-        nascimento = request.form.get("data_nascimento", "")
+        dados, erro = _ler_formulario()
 
-        if not all([nome, email, cpf, nascimento]):
-            flash("Preencha todos os campos obrigatórios.")
-            return render_template(
-                "secretaria/alunos/editar.html",
-                aluno=aluno
-            )
-
-        try:
-            data_nascimento = datetime.strptime(
-                nascimento, "%Y-%m-%d"
-            ).date()
-        except ValueError:
-            flash("Data de nascimento inválida.")
-            return render_template(
-                "secretaria/alunos/editar.html",
-                aluno=aluno
-            )
-
-        dados = {
-            "nome": nome,
-            "email": email,
-            "cpf": cpf,
-            "telefone": telefone or None,
-            "data_nascimento": data_nascimento
-        }
+        if erro:
+            flash(erro)
+            return render_template("secretaria/alunos/editar.html", aluno=aluno)
 
         try:
             aluno_service.atualizar_aluno(aluno, dados)
-        except Exception:
-            from app import db
+        except RegraNegocioError as e:
             db.session.rollback()
+            flash(str(e))
+            return render_template("secretaria/alunos/editar.html", aluno=aluno)
+        except SQLAlchemyError:
+            db.session.rollback()
+            current_app.logger.exception("Erro ao atualizar aluno")
             flash("Erro ao atualizar aluno. Verifique os dados.")
-            return render_template(
-                "secretaria/alunos/editar.html",
-                aluno=aluno
-            )
+            return render_template("secretaria/alunos/editar.html", aluno=aluno)
 
         flash("Aluno atualizado com sucesso!")
         return redirect(url_for("alunos.listar"))
 
-    return render_template(
-        "secretaria/alunos/editar.html",
-        aluno=aluno
-    )
+    return render_template("secretaria/alunos/editar.html", aluno=aluno)
 
 
 @alunos.route("/excluir/<int:id>", methods=["POST"])
+@perfil_required("secretaria")
 def excluir(id):
-    if not secretaria_required():
-        return redirect(url_for("auth.login"))
-
     aluno = aluno_service.buscar_aluno(id)
 
     try:
         aluno_service.excluir_aluno(aluno)
-    except Exception:
-        from app import db
+    except RegraNegocioError as e:
+        flash(str(e))
+        return redirect(url_for("alunos.listar"))
+    except SQLAlchemyError:
         db.session.rollback()
+        current_app.logger.exception("Erro ao excluir aluno")
         flash("Não foi possível excluir o aluno.")
         return redirect(url_for("alunos.listar"))
 

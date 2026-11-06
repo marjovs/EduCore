@@ -38,12 +38,12 @@ class="bg-blue-700 text-white px-5 py-3 rounded-lg hover:bg-blue-800">
 <table class="w-full text-left">
 <thead class="bg-blue-50 text-gray-700">
 <tr>
-<th class="p-4">Ações</th>
 <th class="p-4">ID</th>
 <th class="p-4">Nome</th>
 <th class="p-4">E-mail</th>
 <th class="p-4">CPF</th>
 <th class="p-4">Telefone</th>
+<th class="p-4">Ações</th>
 </tr>
 </thead>
 
@@ -62,15 +62,14 @@ class="text-blue-700 hover:underline font-medium">
 Editar
 </a>
 
-<form method="POST"
-action="{{ url_for('alunos.excluir', id=aluno.id) }}"
-onsubmit="return confirm('Tem certeza que deseja excluir este aluno?');">
-
-<button type="submit"
-class="text-red-600 hover:underline font-medium">
-Excluir
-</button>
+<details class="inline-block">
+<summary class="cursor-pointer list-none [&::-webkit-details-marker]:hidden text-red-600 hover:underline font-medium">Excluir</summary>
+<form method="POST" action="{{ url_for('alunos.excluir', id=aluno.id) }}" class="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm whitespace-normal w-56">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<p class="text-gray-700 mb-2">Tem certeza que deseja excluir este aluno?</p>
+<button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded">Sim, excluir</button>
 </form>
+</details>
 </div>
 </td>
 </tr>

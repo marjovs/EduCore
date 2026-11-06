@@ -43,7 +43,8 @@ CREATE TABLE IF NOT EXISTS frequencias (
     data         DATE        NOT NULL,
     status       VARCHAR(20) NOT NULL,
     observacao   TEXT,
-    matricula_id INTEGER     NOT NULL REFERENCES matriculas (id)
+    matricula_id INTEGER     NOT NULL REFERENCES matriculas (id),
+    CONSTRAINT uq_frequencia_matricula_data UNIQUE (matricula_id, data)
 );
 
 CREATE TABLE IF NOT EXISTS notas (
@@ -51,5 +52,15 @@ CREATE TABLE IF NOT EXISTS notas (
     avaliacao    VARCHAR(100)     NOT NULL,
     valor        DOUBLE PRECISION NOT NULL,
     data         DATE             NOT NULL,
-    matricula_id INTEGER          NOT NULL REFERENCES matriculas (id)
+    matricula_id INTEGER          NOT NULL REFERENCES matriculas (id),
+    CONSTRAINT uq_nota_matricula_avaliacao UNIQUE (matricula_id, avaliacao)
+);
+
+-- Usuários do sistema (senhas guardadas como hash; os usuários iniciais
+-- são criados pelo app na primeira execução).
+CREATE TABLE IF NOT EXISTS usuarios (
+    id         SERIAL PRIMARY KEY,
+    email      VARCHAR(120) NOT NULL UNIQUE,
+    senha_hash VARCHAR(255) NOT NULL,
+    perfil     VARCHAR(20)  NOT NULL
 );

@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-100 p-8">
+    <div class="max-w-7xl mx-auto">
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800">
+                    Desempenho Acadêmico
+                </h1>
+
+                <p class="text-gray-500 mt-2">
+                    Consulta das notas registradas pelos instrutores.
+                </p>
+            </div>
+
+            <a href="{{ url_for('coordenacao.painel') }}" class="bg-purple-600 hover:bg-purple-700 text-white px-5 py-2 rounded-lg">
+                Voltar ao Painel
+            </a>
+        </div>
+
+        <div class="bg-white rounded-xl shadow overflow-x-auto">
+            <table class="w-full text-left">
+                <thead class="bg-purple-100 text-purple-800">
+                    <tr>
+                        <th class="p-4">
+                            Aluno
+                        </th>
+                        <th class="p-4">
+                            Turma
+                        </th>
+                        <th class="p-4">
+                            Curso
+                        </th>
+                        <th class="p-4">
+                            Avaliação
+                        </th>
+                        <th class="p-4">
+                            Nota
+                        </th>
+                        <th class="p-4">
+                            Data
+                        </th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for nota in notas %}
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="p-4">
+                            {{ nota.matricula.aluno.nome }}
+                        </td>
+
+                        <td class="p-4">
+                            {{ nota.matricula.turma.nome }}
+                        </td>
+
+                        <td class="p-4">
+                            {{ nota.matricula.turma.curso.nome }}
+                        </td>
+
+                        <td class="p-4">
+                            {{ nota.avaliacao }}
+                        </td>
+
+                        <td class="p-4">
+                            <span class="font-semibold text-purple-700">
+                                {{ "%.1f"|format(nota.valor) }}
+                            </span>
+                        </td>
+
+                        <td class="p-4">
+                            {{ nota.data.strftime('%d/%m/%Y') }}
+                        </td>
+
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="p-6 text-center text-gray-500">
+                            Nenhuma nota registrada.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

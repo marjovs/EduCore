@@ -1,7 +1,11 @@
 from app import db
 
+
 class Nota(db.Model):
     __tablename__ = "notas"
+    __table_args__ = (
+        db.UniqueConstraint("matricula_id", "avaliacao", name="uq_nota_matricula_avaliacao"),
+    )
 
     id = db.Column(db.Integer, primary_key=True)
     avaliacao = db.Column(db.String(100), nullable=False)

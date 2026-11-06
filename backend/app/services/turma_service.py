@@ -1,13 +1,31 @@
+from sqlalchemy.orm import joinedload
+
 from app import db
 from app.models.turma import Turma
+from app.services import RegraNegocioError
 
 
 def listar_turmas():
-    return Turma.query.order_by(Turma.nome).all()
+    return (
+        Turma.query
+        .options(joinedload(Turma.curso))
+        .order_by(Turma.nome)
+        .all()
+    )
+
+
+def listar_turmas_ativas():
+    return (
+        Turma.query
+        .options(joinedload(Turma.curso))
+        .filter_by(status="Ativa")
+        .order_by(Turma.nome)
+        .all()
+    )
 
 
 def buscar_turma(turma_id):
-    return Turma.query.get_or_404(turma_id)
+    return db.get_or_404(Turma, turma_id)
 
 
 def cadastrar_turma(dados):
@@ -38,5 +56,11 @@ def atualizar_turma(turma, dados):
 
 
 def excluir_turma(turma):
+    if turma.matriculas:
+        raise RegraNegocioError(
+            "Não é possível excluir: a turma possui matrículas. "
+            "Altere o status para Inativa."
+        )
+
     db.session.delete(turma)
     db.session.commit()

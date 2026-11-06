@@ -27,6 +27,67 @@
 > - ⚠️ A senha do banco foi colada no chat. Recomenda-se trocá-la em *Neon > Roles > Reset password* e atualizar o `.env`.
 > - A skill do Neon (`npx neon skills -y`) não foi instalada: ela exige Node.js ≥ 22.20.0 e a máquina tem o 22.14.0.
 
+> ### ✅ Atualização — segurança, regras e desempenho (06/11/2026)
+> | Item | Situação | O que foi feito |
+> |---|---|---|
+> | 3.3 Senhas em texto puro | ✅ | Novo model `Usuario` (tabela `usuarios`) com hash `scrypt`. Os 3 usuários iniciais são criados na primeira execução; as senhas podem vir de `SENHA_SECRETARIA`, `SENHA_INSTRUTOR` e `SENHA_COORDENACAO` no `.env`. O e-mail de login não diferencia maiúsculas. |
+> | 3.4 CSRF | ✅ | `Flask-WTF` (`CSRFProtect`), com token em todos os 14 formulários POST. Um token inválido mostra uma mensagem e volta para a página anterior. |
+> | Perfil inválido na sessão | ✅ | `/dashboard` limpa a sessão em vez de dar erro 500. |
+> | 4.1 / 4.2 Duplicidades | ✅ | Restrições `UNIQUE (matricula_id, avaliacao)` em `notas` e `UNIQUE (matricula_id, data)` em `frequencias`, aplicadas também no Neon. Nota repetida para a mesma avaliação é recusada com mensagem. |
+> | 4.3 Commit em loop | ✅ | Frequências e notas da turma são gravadas numa única transação. |
+> | 4.4 Consultas N×M | ✅ | Filtros feitos no banco (`listar_matriculas_ativas_da_turma`, `listar_turmas_ativas`, `existe_matricula_ativa`) e `joinedload` nas listagens. O painel da coordenação faz 1 consulta em vez de 4 (728 → ~225 ms no Neon). |
+> | 4.5 API legada | ✅ | `db.get_or_404(Model, id)`. |
+> | 4.6 Controle de acesso | ✅ | Decorator único `@perfil_required("...")` em `app/acesso.py`, usado em todas as rotas. |
+> | 4.7 Exclusão com vínculos | ✅ | Curso com turmas, turma com matrículas e aluno com matrículas não são excluídos, e o usuário vê o motivo. |
+> | 4.8 Turma com curso inativo | ✅ | A edição não permite trocar a turma para um curso inativo. |
+> | Diferença de maiúsculas no PostgreSQL | ✅ | E-mail de aluno salvo em minúsculas; nomes de curso e de avaliação comparados sem diferenciar maiúsculas. |
+> | Erros escondidos por `except Exception` | ✅ | As rotas capturam `RegraNegocioError` (mensagem ao usuário) e `SQLAlchemyError` (com `logger.exception`). |
+> | Validação de valores de formulário | ✅ | Modalidade, status e turno só aceitam os valores previstos. |
+> | 5.1 / 5.3 / 5.4 Limpeza | ✅ | Sem avisos do `pyflakes`; `educore.sql` (MySQL) removido; `educore_postgres.sql` atualizado. |
+> | 4.9 Flask-Migrate | ⏳ | Pendente. Por enquanto as mudanças de schema em tabelas existentes precisam de `ALTER TABLE` manual. |
+> | 5.6 Templates sem `base.html`, Tailwind via CDN | ⏳ | Pendente (visual, não afeta o funcionamento). |
+>
+> Testes: 42 verificações em SQLite cobrindo login, CSRF, acesso cruzado, duplicidades, exclusões e as 3 áreas, todas OK. No Neon, as 13 páginas responderam 200 com login real.
+
+> ### ✅ Atualização — testes manuais no navegador (06/11/2026)
+> - **Botão "Excluir" não funcionava.** Os formulários usavam `onsubmit="return confirm(...)"`. O navegador embutido do Claude não exibe o diálogo nativo e responde "não" na hora (`confirm()` retornou `false` em 1 ms), então o envio era cancelado e nenhum `POST` chegava ao servidor. A confirmação agora é feita na própria página, com `<details>`: clicar em **Excluir** (ou **Cancelar**, nas matrículas) abre uma caixa com o botão **"Sim, excluir"**. Vale para as listas de alunos, cursos, turmas e matrículas e não depende de JavaScript.
+> - **Colunas desalinhadas na lista de alunos:** o cabeçalho "Ações" estava na primeira coluna e os botões na última; foi corrigido.
+> - Exclusão testada de ponta a ponta com CSRF ligado; as 42 verificações continuam OK.
+> - Criado `.claude/launch.json` para subir o app pelo painel de preview do Claude (usa `.venv/Scripts/python.exe backend/run.py`, porta 5000).
+
+---
+
+## 0. Como continuar em outro computador
+
+O arquivo `backend/.env` **não vai para o Git** (tem a senha do banco). Em outra máquina:
+
+1. Clonar o repositório e trocar para a branch de trabalho:
+   ```bash
+   git clone https://github.com/marjovs/EduCore.git
+   cd EduCore
+   git checkout feat/neon-e-correcoes
+   ```
+2. Criar o ambiente virtual e instalar as dependências:
+   ```bash
+   python -m venv .venv
+   .venv\Scripts\activate
+   pip install -r backend/requirements.txt
+   ```
+3. Criar o `backend/.env` a partir do `backend/.env.example`, preenchendo:
+   - `SECRET_KEY`: gerar uma nova com `python -c "import secrets; print(secrets.token_hex(32))"`. Com uma chave nova, os logins abertos expiram, e não há outro efeito.
+   - `DATABASE_URL`: copiar do painel do Neon (*Connect*, com *Connection pooling* marcado).
+   - `FLASK_DEBUG=1`.
+4. Rodar: `python backend/run.py` e abrir http://127.0.0.1:5000.
+
+Logins de desenvolvimento: `secretaria@educore.com` / `012345`, `instrutor@educore.com` / `123456`, `coordenacao@educore.com` / `234567`.
+
+### Pendências para a próxima sessão
+- ⚠️ **Trocar a senha do banco no Neon** (*Roles > neondb_owner > Reset password*), porque a atual foi exposta no chat, e atualizar o `.env`.
+- Trocar as senhas dos 3 usuários iniciais antes de qualquer uso real.
+- Flask‑Migrate (item 4.9) para versionar mudanças de schema.
+- Templates: padronizar com `base.html` e trocar o Tailwind via CDN por um CSS gerado (item 5.6).
+- Revisar o PR [marjovs/EduCore#1](https://github.com/marjovs/EduCore/pull/1) e fazer o merge na `main`.
+
 ---
 
 ## 1. Como a análise foi feita

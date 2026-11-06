@@ -26,6 +26,7 @@ Cadastrar Turma
 {% endwith %}
 
 <form method="POST" class="space-y-4">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
 <div>
 <label class="block font-medium mb-1">Nome da Turma</label>

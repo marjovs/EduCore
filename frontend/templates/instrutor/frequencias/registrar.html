@@ -32,6 +32,7 @@ Registrar Frequência
 {% endwith %}
 
 <form method="POST">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
 <div class="mb-6">
 <label class="block font-medium mb-2">

@@ -1,7 +1,11 @@
 from app import db
 
+
 class Frequencia(db.Model):
     __tablename__ = "frequencias"
+    __table_args__ = (
+        db.UniqueConstraint("matricula_id", "data", name="uq_frequencia_matricula_data"),
+    )
 
     id = db.Column(db.Integer, primary_key=True)
     data = db.Column(db.Date, nullable=False)

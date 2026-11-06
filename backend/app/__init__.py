@@ -1,8 +1,9 @@
-
-from flask import Flask
+from flask import Flask, flash, redirect, request, url_for
 from flask_sqlalchemy import SQLAlchemy
+from flask_wtf.csrf import CSRFError, CSRFProtect
 
 db = SQLAlchemy()
+csrf = CSRFProtect()
 
 
 def create_app():
@@ -15,6 +16,12 @@ def create_app():
     app.config.from_object("config.Config")
 
     db.init_app(app)
+    csrf.init_app(app)
+
+    @app.errorhandler(CSRFError)
+    def csrf_invalido(erro):
+        flash("Sua sessão expirou ou o formulário é inválido. Tente novamente.")
+        return redirect(request.referrer or url_for("auth.login"))
 
     from app.routes.auth_routes import auth
     from app.routes.secretaria_routes import secretaria

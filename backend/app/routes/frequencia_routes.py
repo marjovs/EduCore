@@ -1,130 +1,79 @@
-
-from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 from datetime import date
 
+from flask import Blueprint, current_app, flash, redirect, render_template, request, url_for
+from sqlalchemy.exc import SQLAlchemyError
+
 from app import db
+from app.acesso import perfil_required
 from app.services import frequencia_service, matricula_service, turma_service
 
-frequencias = Blueprint(
-    "frequencias",
-    __name__,
-    url_prefix="/instrutor/frequencia"
-)
+frequencias = Blueprint("frequencias", __name__, url_prefix="/instrutor/frequencia")
 
-
-def instrutor_required():
-    if "usuario" not in session:
-        return redirect(url_for("auth.login"))
-
-    if session.get("perfil") != "instrutor":
-        return redirect(url_for("auth.dashboard"))
-
-    return None
+STATUS_FREQUENCIA = ("Presente", "Falta")
 
 
 @frequencias.route("/")
+@perfil_required("instrutor")
 def listar():
-    acesso = instrutor_required()
-    if acesso:
-        return acesso
-
-    lista_turmas = turma_service.listar_turmas()
-    lista_turmas = [
-        turma for turma in lista_turmas
-        if turma.status == "Ativa"
-    ]
-
     return render_template(
         "instrutor/frequencias/listar.html",
-        turmas=lista_turmas
+        turmas=turma_service.listar_turmas_ativas()
     )
 
 
 @frequencias.route("/registrar/<int:turma_id>", methods=["GET", "POST"])
+@perfil_required("instrutor")
 def registrar(turma_id):
-    acesso = instrutor_required()
-    if acesso:
-        return acesso
-
     turma = turma_service.buscar_turma(turma_id)
 
     if turma.status != "Ativa":
         flash("Turma não encontrada ou inativa.")
         return redirect(url_for("frequencias.listar"))
 
-    todas_matriculas = matricula_service.listar_matriculas()
+    matriculas = matricula_service.listar_matriculas_ativas_da_turma(turma_id)
 
-    matriculas = [
-        matricula for matricula in todas_matriculas
-        if matricula.turma_id == turma_id
-        and matricula.status == "Ativa"
-    ]
+    def tela():
+        return render_template(
+            "instrutor/frequencias/registrar.html",
+            turma=turma,
+            matriculas=matriculas,
+            data_hoje=date.today().isoformat()
+        )
 
     if request.method == "POST":
-        data_registro = request.form.get("data", "").strip()
-
         try:
-            data_registro = date.fromisoformat(data_registro)
+            data_registro = date.fromisoformat(request.form.get("data", "").strip())
         except ValueError:
             flash("Informe uma data válida.")
-            return render_template(
-                "instrutor/frequencias/registrar.html",
-                turma=turma,
-                matriculas=matriculas,
-                data_hoje=date.today().isoformat()
-            )
+            return tela()
 
         dados_frequencias = []
 
         for matricula in matriculas:
             status = request.form.get(f"status_{matricula.id}")
 
-            if status not in ["Presente", "Falta"]:
+            if status not in STATUS_FREQUENCIA:
                 flash("Selecione presença ou falta para todos os alunos.")
-                return render_template(
-                    "instrutor/frequencias/registrar.html",
-                    turma=turma,
-                    matriculas=matriculas,
-                    data_hoje=date.today().isoformat()
-                )
+                return tela()
 
             dados_frequencias.append({
                 "matricula_id": matricula.id,
-                "data": data_registro,
                 "status": status
             })
 
+        if not dados_frequencias:
+            flash("Esta turma não possui alunos com matrícula ativa.")
+            return tela()
+
         try:
-            for dados in dados_frequencias:
-                frequencia_existente = frequencia_service.buscar_frequencia_por_data(
-                    dados["matricula_id"],
-                    dados["data"]
-                )
-
-                if frequencia_existente:
-                    frequencia_service.atualizar_frequencia(
-                        frequencia_existente,
-                        {"status": dados["status"]}
-                    )
-                else:
-                    frequencia_service.registrar_frequencia(dados)
-
-        except Exception:
+            frequencia_service.registrar_frequencias(dados_frequencias, data_registro)
+        except SQLAlchemyError:
             db.session.rollback()
+            current_app.logger.exception("Erro ao registrar frequências")
             flash("Erro ao registrar frequências.")
-            return render_template(
-                "instrutor/frequencias/registrar.html",
-                turma=turma,
-                matriculas=matriculas,
-                data_hoje=date.today().isoformat()
-            )
+            return tela()
 
         flash("Frequências registradas com sucesso!")
         return redirect(url_for("frequencias.listar"))
 
-    return render_template(
-        "instrutor/frequencias/registrar.html",
-        turma=turma,
-        matriculas=matriculas,
-        data_hoje=date.today().isoformat()
-    )
+    return tela()

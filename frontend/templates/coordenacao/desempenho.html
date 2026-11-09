@@ -50,29 +50,23 @@
                         <td class="p-4">
                             {{ nota.matricula.aluno.nome }}
                         </td>
-
                         <td class="p-4">
                             {{ nota.matricula.turma.nome }}
                         </td>
-
                         <td class="p-4">
                             {{ nota.matricula.turma.curso.nome }}
                         </td>
-
                         <td class="p-4">
                             {{ nota.avaliacao }}
                         </td>
-
                         <td class="p-4">
                             <span class="font-semibold text-purple-700">
                                 {{ "%.1f"|format(nota.valor) }}
                             </span>
                         </td>
-
                         <td class="p-4">
                             {{ nota.data.strftime('%d/%m/%Y') }}
                         </td>
-
                     </tr>
                     {% else %}
                     <tr>

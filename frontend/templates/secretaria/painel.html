@@ -1,74 +1,103 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>
+            EduCore | Secretaria
+        </title>
 
-<title>EduCore | Secretaria</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+    </head>
+    <body class="bg-slate-100 min-h-screen">
+        <header class="bg-blue-800 text-white px-8 py-5 flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold">
+                    EduCore
+                </h1>
 
-<script src="https://cdn.tailwindcss.com"></script>
-</head>
+                <p class="text-blue-200 text-sm">
+                    Painel da Secretaria
+                </p>
+            </div>
 
-<body class="bg-slate-100 min-h-screen">
+            <a href="{{ url_for('auth.logout') }}" class="bg-white text-blue-800 px-4 py-2 rounded-lg hover:bg-blue-100">
+                Sair
+            </a>
+        </header>
 
-<header class="bg-blue-800 text-white px-8 py-5 flex justify-between items-center">
-<div>
-<h1 class="text-2xl font-bold">EduCore</h1>
-<p class="text-blue-200 text-sm">Painel da Secretaria</p>
-</div>
+        <main class="p-8">
+            <section class="mb-8">
+                <h2 class="text-2xl font-bold text-gray-800">
+                    Bem-vinda à Secretaria!
+                </h2>
 
-<a href="{{ url_for('auth.logout') }}" class="bg-white text-blue-800 px-4 py-2 rounded-lg hover:bg-blue-100">
-Sair
-</a>
-</header>
+                <p class="text-gray-500 mt-2">
+                    Gerencie as informações acadêmicas da instituição.
+                </p>
+            </section>
 
-<main class="p-8">
+            <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <a href="{{ url_for('alunos.listar') }}" class="bg-white p-6 rounded-xl shadow hover:shadow-lg transition">
+                    <h3 class="text-lg font-semibold text-blue-700">
+                        Alunos
+                    </h3>
+                    
+                    <p class="text-gray-500 mt-2">
+                        Cadastrar e gerenciar alunos.
+                    </p>
+                </a>
 
-<section class="mb-8">
-<h2 class="text-2xl font-bold text-gray-800">
-Bem-vinda à Secretaria!
-</h2>
+                <a href="{{ url_for('cursos.listar') }}" class="bg-white p-6 rounded-xl shadow hover:shadow-lg transition">
+                    <h3 class="text-lg font-semibold text-blue-700">
+                        Cursos
+                    </h3>
+                    
+                    <p class="text-gray-500 mt-2">
+                        Gerenciar cursos oferecidos.
+                    </p>
+                </a>
 
-<p class="text-gray-500 mt-2">
-Gerencie as informações acadêmicas da instituição.
-</p>
-</section>
+                <a href="{{ url_for('turmas.listar') }}" class="bg-white p-6 rounded-xl shadow hover:shadow-lg transition">
+                    <h3 class="text-lg font-semibold text-blue-700">
+                        Turmas
+                    </h3>
+                    
+                    <p class="text-gray-500 mt-2">
+                        Organizar turmas e períodos.
+                    </p>
+                </a>
 
-<section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <a href="{{ url_for('matriculas.listar') }}" class="bg-white p-6 rounded-xl shadow hover:shadow-lg transition">
+                    <h3 class="text-lg font-semibold text-blue-700">
+                        Matrículas
+                    </h3>
 
-<a href="{{ url_for('alunos.listar') }}" class="bg-white p-6 rounded-xl shadow hover:shadow-lg transition">
-<h3 class="text-lg font-semibold text-blue-700">Alunos</h3>
-<p class="text-gray-500 mt-2">Cadastrar e gerenciar alunos.</p>
-</a>
+                    <p class="text-gray-500 mt-2">
+                        Realizar e consultar matrículas.
+                    </p>
+                </a>
 
-<a href="{{ url_for('cursos.listar') }}" class="bg-white p-6 rounded-xl shadow hover:shadow-lg transition">
-<h3 class="text-lg font-semibold text-blue-700">Cursos</h3>
-<p class="text-gray-500 mt-2">Gerenciar cursos oferecidos.</p>
-</a>
+                <a href="{{ url_for('secretaria.frequencia') }}" class="bg-white p-6 rounded-xl shadow hover:shadow-lg transition">
+                    <h3 class="text-lg font-semibold text-blue-700">
+                        Frequência
+                    </h3>
+                    
+                    <p class="text-gray-500 mt-2">
+                        Consultar frequência dos alunos.
+                    </p>
+                </a>
 
-<a href="{{ url_for('turmas.listar') }}" class="bg-white p-6 rounded-xl shadow hover:shadow-lg transition">
-<h3 class="text-lg font-semibold text-blue-700">Turmas</h3>
-<p class="text-gray-500 mt-2">Organizar turmas e períodos.</p>
-</a>
-
-<a href="{{ url_for('matriculas.listar') }}" class="bg-white p-6 rounded-xl shadow hover:shadow-lg transition">
-<h3 class="text-lg font-semibold text-blue-700">Matrículas</h3>
-<p class="text-gray-500 mt-2">Realizar e consultar matrículas.</p>
-</a>
-
-<a href="#" class="bg-white p-6 rounded-xl shadow hover:shadow-lg transition">
-<h3 class="text-lg font-semibold text-blue-700">Frequência</h3>
-<p class="text-gray-500 mt-2">Consultar frequência dos alunos.</p>
-</a>
-
-<a href="#" class="bg-white p-6 rounded-xl shadow hover:shadow-lg transition">
-<h3 class="text-lg font-semibold text-blue-700">Notas</h3>
-<p class="text-gray-500 mt-2">Consultar notas acadêmicas.</p>
-</a>
-
-</section>
-
-</main>
-
-</body>
+                <a href="{{ url_for('secretaria.notas') }}" class="bg-white p-6 rounded-xl shadow hover:shadow-lg transition">
+                    <h3 class="text-lg font-semibold text-blue-700">
+                        Notas
+                    </h3>
+                    
+                    <p class="text-gray-500 mt-2">
+                        Consultar notas acadêmicas.
+                    </p>
+                </a>
+            </section>
+        </main>
+    </body>
 </html>

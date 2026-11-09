@@ -56,20 +56,10 @@ class="bg-blue-700 text-white px-5 py-3 rounded-lg hover:bg-blue-800">
 <td class="p-4">{{ aluno.cpf }}</td>
 <td class="p-4">{{ aluno.telefone or '-' }}</td>
 <td class="p-4">
-<div class="flex gap-3 items-center">
-<a href="{{ url_for('alunos.editar', id=aluno.id) }}"
-class="text-blue-700 hover:underline font-medium">
-Editar
-</a>
-
-<details class="inline-block">
-<summary class="cursor-pointer list-none [&::-webkit-details-marker]:hidden text-red-600 hover:underline font-medium">Excluir</summary>
-<form method="POST" action="{{ url_for('alunos.excluir', id=aluno.id) }}" class="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm whitespace-normal w-56">
-<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-<p class="text-gray-700 mb-2">Tem certeza que deseja excluir este aluno?</p>
-<button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded">Sim, excluir</button>
-</form>
-</details>
+{% import "secretaria/_acoes.html" as acoes with context %}
+<div class="flex gap-2 items-start">
+{{ acoes.editar(url_for('alunos.editar', id=aluno.id)) }}
+{{ acoes.confirmar(url_for('alunos.excluir', id=aluno.id), "Excluir", "Tem certeza que deseja excluir este aluno?") }}
 </div>
 </td>
 </tr>
@@ -85,9 +75,8 @@ Nenhum aluno cadastrado ainda.
 
 </section>
 
-<a href="{{ url_for('secretaria.painel') }}"
-class="inline-block mt-6 text-blue-700 hover:underline">
-← Voltar ao painel
+<a href="{{ url_for('secretaria.painel') }}" class="inline-block mt-6 text-blue-600 hover:underline">
+Voltar ao painel
 </a>
 
 </main>

@@ -14,6 +14,16 @@ def listar_turmas():
     )
 
 
+def listar_turmas_para_filtro():
+    """Turmas da mais recente para a mais antiga, para os selects de filtro."""
+    return (
+        Turma.query
+        .options(joinedload(Turma.curso))
+        .order_by(Turma.ano.desc(), Turma.nome)
+        .all()
+    )
+
+
 def listar_turmas_ativas():
     return (
         Turma.query

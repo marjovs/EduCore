@@ -1,0 +1,39 @@
+{# Navegação entre páginas. Espera: pagina (objeto Pagination). Mantém os filtros da URL. #}
+{% if pagina.pages > 1 %}
+{% set args = request.args.to_dict() %}
+<nav class="flex flex-wrap items-center justify-between gap-4 mt-4 text-sm">
+    <p class="text-gray-500">
+        Mostrando {{ pagina.first }}–{{ pagina.last }} de {{ pagina.total }}
+    </p>
+
+    <div class="flex flex-wrap gap-1">
+        {% if pagina.has_prev %}
+        <a href="{{ url_for(request.endpoint, **dict(args, pagina=pagina.prev_num)) }}" class="px-3 py-1 rounded-lg bg-white shadow text-blue-700 hover:bg-blue-50">
+            ‹ Anterior
+        </a>
+        {% endif %}
+
+        {% for numero in pagina.iter_pages(left_edge=1, left_current=2, right_current=2, right_edge=1) %}
+        {% if numero is none %}
+        <span class="px-2 py-1 text-gray-400">…</span>
+        {% elif numero == pagina.page %}
+        <span class="px-3 py-1 rounded-lg bg-blue-600 text-white">{{ numero }}</span>
+        {% else %}
+        <a href="{{ url_for(request.endpoint, **dict(args, pagina=numero)) }}" class="px-3 py-1 rounded-lg bg-white shadow text-blue-700 hover:bg-blue-50">
+            {{ numero }}
+        </a>
+        {% endif %}
+        {% endfor %}
+
+        {% if pagina.has_next %}
+        <a href="{{ url_for(request.endpoint, **dict(args, pagina=pagina.next_num)) }}" class="px-3 py-1 rounded-lg bg-white shadow text-blue-700 hover:bg-blue-50">
+            Próxima ›
+        </a>
+        {% endif %}
+    </div>
+</nav>
+{% elif pagina.total %}
+<p class="text-gray-500 text-sm mt-4">
+    {{ pagina.total }} resultado{{ 's' if pagina.total != 1 }}
+</p>
+{% endif %}

@@ -1,119 +1,112 @@
 {% extends "base.html" %}
 
 {% block content %}
-
 <div class="min-h-screen bg-gray-100 p-8">
+    <div class="max-w-7xl mx-auto">
+        <!-- Cabeçalho -->
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800">
+                    Painel da Coordenação
+                </h1>
 
-<div class="max-w-7xl mx-auto">
+                <p class="text-gray-500 mt-2">
+                    Acompanhe os indicadores acadêmicos do EduCore.
+                </p>
+            </div>
+        </div>
 
-<!-- Cabeçalho -->
-<div class="flex justify-between items-center mb-8">
+        <!-- Indicadores -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+            <div class="bg-white p-6 rounded-xl shadow">
+                <h2 class="text-gray-500 text-sm">
+                    Total de Alunos
+                </h2>
+                
+                <p class="text-3xl font-bold text-purple-600 mt-2">
+                    {{ total_alunos }}
+                </p>
+            </div>
 
-<div>
-<h1 class="text-3xl font-bold text-gray-800">
-Painel da Coordenação
-</h1>
+            <div class="bg-white p-6 rounded-xl shadow">
+                <h2 class="text-gray-500 text-sm">
+                    Matrículas Ativas
+                </h2>
+                
+                <p class="text-3xl font-bold text-blue-600 mt-2">
+                    {{ total_matriculas }}
+                </p>
+            </div>
 
-<p class="text-gray-500 mt-2">
-Acompanhe os indicadores acadêmicos do EduCore.
-</p>
+            <div class="bg-white p-6 rounded-xl shadow">
+                <h2 class="text-gray-500 text-sm">
+                    Notas Registradas
+                </h2>
+                
+                <p class="text-3xl font-bold text-green-600 mt-2">
+                    {{ total_notas }}
+                </p>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow">
+                <h2 class="text-gray-500 text-sm">
+                    Registros de Frequência
+                </h2>
+                
+                <p class="text-3xl font-bold text-orange-500 mt-2">
+                    {{ total_frequencias }}
+                </p>
+            </div>
+        </div>
+
+        <!-- Consultas -->
+        <div class="bg-white rounded-xl shadow p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-6">
+                Consultas Acadêmicas
+            </h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <a href="{{ url_for('coordenacao.alunos') }}" class="p-5 border rounded-lg hover:bg-purple-50 transition">
+                    <h3 class="font-semibold text-purple-700">
+                        Consultar Alunos
+                    </h3>
+                    
+                    <p class="text-sm text-gray-500 mt-2">
+                        Visualize os alunos cadastrados.
+                    </p>
+                </a>
+
+                <a href="{{ url_for('coordenacao.matriculas') }}" class="p-5 border rounded-lg hover:bg-blue-50 transition">
+                    <h3 class="font-semibold text-blue-700">
+                        Consultar Matrículas
+                    </h3>
+                    
+                    <p class="text-sm text-gray-500 mt-2">
+                        Acompanhe as matrículas e seus status.
+                    </p>
+                </a>
+
+                <a href="{{ url_for('coordenacao.desempenho') }}" class="p-5 border rounded-lg hover:bg-green-50 transition">
+                    <h3 class="font-semibold text-green-700">
+                        Desempenho Acadêmico
+                    </h3>
+                    
+                    <p class="text-sm text-gray-500 mt-2">
+                        Consulte as notas registradas.
+                    </p>
+                </a>
+
+                <a href="{{ url_for('coordenacao.frequencia') }}" class="p-5 border rounded-lg hover:bg-orange-50 transition">
+                    <h3 class="font-semibold text-orange-600">
+                        Consultar Frequência
+                    </h3>
+                    
+                    <p class="text-sm text-gray-500 mt-2"> 
+                        Acompanhe os registros de presença.
+                    </p>
+                </a>
+            </div>
+        </div>
+    </div>
 </div>
-
-<a href="{{ url_for('auth.logout') }}"
-class="bg-red-500 hover:bg-red-600 text-white px-5 py-2 rounded-lg">
-Sair
-</a>
-
-</div>
-
-<!-- Indicadores -->
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-
-<div class="bg-white p-6 rounded-xl shadow">
-<h2 class="text-gray-500 text-sm">Total de Alunos</h2>
-<p class="text-3xl font-bold text-purple-600 mt-2">
-{{ total_alunos }}
-</p>
-</div>
-
-<div class="bg-white p-6 rounded-xl shadow">
-<h2 class="text-gray-500 text-sm">Matrículas Ativas</h2>
-<p class="text-3xl font-bold text-blue-600 mt-2">
-{{ total_matriculas }}
-</p>
-</div>
-
-<div class="bg-white p-6 rounded-xl shadow">
-<h2 class="text-gray-500 text-sm">Notas Registradas</h2>
-<p class="text-3xl font-bold text-green-600 mt-2">
-{{ total_notas }}
-</p>
-</div>
-
-<div class="bg-white p-6 rounded-xl shadow">
-<h2 class="text-gray-500 text-sm">Registros de Frequência</h2>
-<p class="text-3xl font-bold text-orange-500 mt-2">
-{{ total_frequencias }}
-</p>
-</div>
-
-</div>
-
-<!-- Consultas -->
-<div class="bg-white rounded-xl shadow p-6">
-
-<h2 class="text-xl font-bold text-gray-800 mb-6">
-Consultas Acadêmicas
-</h2>
-
-<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-<a href="{{ url_for('coordenacao.alunos') }}"
-class="p-5 border rounded-lg hover:bg-purple-50 transition">
-<h3 class="font-semibold text-purple-700">
-Consultar Alunos
-</h3>
-<p class="text-sm text-gray-500 mt-2">
-Visualize os alunos cadastrados.
-</p>
-</a>
-
-<a href="{{ url_for('coordenacao.matriculas') }}"
-class="p-5 border rounded-lg hover:bg-blue-50 transition">
-<h3 class="font-semibold text-blue-700">
-Consultar Matrículas
-</h3>
-<p class="text-sm text-gray-500 mt-2">
-Acompanhe as matrículas e seus status.
-</p>
-</a>
-
-<a href="{{ url_for('coordenacao.desempenho') }}"
-class="p-5 border rounded-lg hover:bg-green-50 transition">
-<h3 class="font-semibold text-green-700">
-Desempenho Acadêmico
-</h3>
-<p class="text-sm text-gray-500 mt-2">
-Consulte as notas registradas.
-</p>
-</a>
-
-<a href="{{ url_for('coordenacao.frequencia') }}"
-class="p-5 border rounded-lg hover:bg-orange-50 transition">
-<h3 class="font-semibold text-orange-600">
-Consultar Frequência
-</h3>
-<p class="text-sm text-gray-500 mt-2">
-Acompanhe os registros de presença.
-</p>
-</a>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
 {% endblock %}

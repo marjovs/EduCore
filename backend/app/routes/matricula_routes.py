@@ -5,6 +5,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from app import db
 from app.acesso import perfil_required
+from app.routes.filtros import ler_filtros
 from app.services import aluno_service, matricula_service, turma_service
 
 matriculas = Blueprint("matriculas", __name__, url_prefix="/secretaria/matriculas")
@@ -13,9 +14,25 @@ matriculas = Blueprint("matriculas", __name__, url_prefix="/secretaria/matricula
 @matriculas.route("/")
 @perfil_required("secretaria")
 def listar():
+    # Por padrão só as ativas aparecem; as canceladas ficam num filtro à parte
+    # para não poluir a lista.
+    ver_canceladas = request.args.get("canceladas") == "1"
+    filtros = ler_filtros()
+
+    pagina = matricula_service.buscar_matriculas(
+        status="Cancelada" if ver_canceladas else "Ativa",
+        busca=filtros["busca"],
+        ano=filtros["ano"],
+        pagina=filtros["pagina"],
+    )
+
     return render_template(
         "secretaria/matriculas/listar.html",
-        matriculas=matricula_service.listar_matriculas()
+        pagina=pagina,
+        filtros=filtros,
+        anos=matricula_service.listar_anos_das_turmas(),
+        ver_canceladas=ver_canceladas,
+        total_canceladas=matricula_service.contar_matriculas_canceladas()
     )
 
 

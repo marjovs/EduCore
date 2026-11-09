@@ -52,18 +52,10 @@ class="bg-blue-700 text-white px-5 py-3 rounded-lg hover:bg-blue-800">
 <td class="p-4">{{ curso.modalidade }}</td>
 <td class="p-4">{{ curso.status }}</td>
 <td class="p-4">
-<div class="flex gap-3">
-<a href="{{ url_for('cursos.editar', id=curso.id) }}"
-class="text-blue-700 hover:underline">Editar</a>
-
-<details class="inline-block">
-<summary class="cursor-pointer list-none [&::-webkit-details-marker]:hidden text-red-600 hover:underline font-medium">Excluir</summary>
-<form method="POST" action="{{ url_for('cursos.excluir', id=curso.id) }}" class="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm whitespace-normal w-56">
-<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-<p class="text-gray-700 mb-2">Deseja excluir este curso?</p>
-<button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded">Sim, excluir</button>
-</form>
-</details>
+{% import "secretaria/_acoes.html" as acoes with context %}
+<div class="flex gap-2 items-start">
+{{ acoes.editar(url_for('cursos.editar', id=curso.id)) }}
+{{ acoes.confirmar(url_for('cursos.excluir', id=curso.id), "Excluir", "Deseja excluir este curso?") }}
 </div>
 </td>
 </tr>

@@ -1,0 +1,66 @@
+{#
+    Barra de busca das listagens da secretaria.
+    Espera: endpoint, filtros, anos. Opcionais: turmas (mostra o select de turma),
+    campos_ocultos (dict de parâmetros a preservar), placeholder.
+#}
+<form method="GET" action="{{ url_for(endpoint) }}" class="bg-white rounded-xl shadow p-4 mb-6 flex flex-col lg:flex-row gap-4 lg:items-end">
+    {% for nome, valor in (campos_ocultos or {}).items() %}
+    <input type="hidden" name="{{ nome }}" value="{{ valor }}">
+    {% endfor %}
+
+    <label class="flex-[2]">
+        <span class="block text-sm font-medium text-gray-700 mb-1">
+            Buscar
+        </span>
+
+        <input type="search" name="busca" value="{{ filtros.busca }}" maxlength="100"
+               placeholder="{{ placeholder or 'Nome do aluno ou CPF' }}"
+               class="w-full border border-gray-300 rounded-lg p-2">
+    </label>
+
+    <label class="flex-1">
+        <span class="block text-sm font-medium text-gray-700 mb-1">
+            Ano
+        </span>
+
+        <select name="ano" class="w-full border border-gray-300 rounded-lg p-2">
+            <option value="">Todos os anos</option>
+            {% for ano in anos %}
+            <option value="{{ ano }}" {{ 'selected' if filtros.ano == ano }}>{{ ano }}</option>
+            {% endfor %}
+        </select>
+    </label>
+
+    {% if turmas is defined %}
+    <label class="flex-[2]">
+        <span class="block text-sm font-medium text-gray-700 mb-1">
+            Turma
+        </span>
+
+        <select name="turma_id" class="w-full border border-gray-300 rounded-lg p-2">
+            <option value="">Todas as turmas</option>
+            {% for ano, turmas_do_ano in turmas|groupby('ano')|reverse %}
+            <optgroup label="{{ ano }}">
+                {% for turma in turmas_do_ano %}
+                <option value="{{ turma.id }}" {{ 'selected' if filtros.turma_id == turma.id }}>
+                    {{ turma.nome }} ({{ turma.curso.nome }})
+                </option>
+                {% endfor %}
+            </optgroup>
+            {% endfor %}
+        </select>
+    </label>
+    {% endif %}
+
+    <div class="flex gap-2">
+        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg">
+            Buscar
+        </button>
+
+        {% if filtros.busca or filtros.ano or filtros.turma_id %}
+        <a href="{{ url_for(endpoint, **(campos_ocultos or {})) }}" class="px-5 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50">
+            Limpar
+        </a>
+        {% endif %}
+    </div>
+</form>

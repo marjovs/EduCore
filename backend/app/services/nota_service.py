@@ -1,11 +1,12 @@
 from sqlalchemy import func
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import contains_eager, joinedload
 
 from app import db
 from app.models.matricula import Matricula
 from app.models.nota import Nota
 from app.models.turma import Turma
 from app.services import RegraNegocioError
+from app.services.busca import condicao_busca, paginar
 
 
 def listar_notas():
@@ -20,6 +21,53 @@ def listar_notas():
         .order_by(Nota.data.desc())
         .all()
     )
+
+
+def _consulta_filtrada(consulta, busca=None, turma_id=None, ano=None):
+    """Aplica os filtros da secretaria. Considera só matrículas ativas."""
+    consulta = (
+        consulta
+        .join(Nota.matricula)
+        .join(Matricula.aluno)
+        .join(Matricula.turma)
+        .filter(Matricula.status == "Ativa")
+    )
+
+    if busca:
+        consulta = consulta.filter(condicao_busca(busca))
+
+    if turma_id:
+        consulta = consulta.filter(Matricula.turma_id == turma_id)
+
+    if ano:
+        consulta = consulta.filter(Turma.ano == ano)
+
+    return consulta
+
+
+def buscar_notas(busca=None, turma_id=None, ano=None, pagina=1):
+    """Retorna (página de notas, resumo) com os filtros aplicados.
+
+    O resumo (quantidade e média) é calculado no banco sobre todos os
+    resultados, não só sobre a página exibida.
+    """
+    consulta = (
+        _consulta_filtrada(Nota.query, busca, turma_id, ano)
+        .options(
+            contains_eager(Nota.matricula).contains_eager(Matricula.aluno),
+            contains_eager(Nota.matricula)
+            .contains_eager(Matricula.turma)
+            .joinedload(Turma.curso),
+        )
+        .order_by(Nota.data.desc(), Nota.id.desc())
+    )
+
+    total, media = _consulta_filtrada(
+        db.session.query(func.count(Nota.id), func.avg(Nota.valor)),
+        busca, turma_id, ano
+    ).one()
+
+    return paginar(consulta, pagina), {"total": total, "media": media}
 
 
 def registrar_notas(lista_dados):

@@ -9,7 +9,7 @@
                 <h1 class="text-3xl font-bold text-gray-800">
                     Alunos
                 </h1>
-
+                
                 <p class="text-gray-500 mt-2">
                     Consulta dos alunos cadastrados no EduCore.
                 </p>
@@ -25,25 +25,51 @@
             <table class="w-full text-left">
                 <thead class="bg-purple-100 text-purple-800">
                     <tr>
-                        <th class="p-4">ID</th>
-                        <th class="p-4">Nome</th>
-                        <th class="p-4">E-mail</th>
-                        <th class="p-4">CPF</th>
-                        <th class="p-4">Telefone</th>
-                        <th class="p-4">Nascimento</th>
-                        <th class="p-4">Matrículas Ativas</th>
+                        <th class="p-4">
+                            ID
+                        </th>
+                        <th class="p-4">
+                            Nome
+                        </th>
+                        <th class="p-4">
+                            E-mail
+                        </th>
+                        <th class="p-4">
+                            CPF
+                        </th>
+                        <th class="p-4">
+                            Telefone
+                        </th>
+                        <th class="p-4">
+                            Nascimento
+                        </th>
+                        <th class="p-4">
+                            Matrículas Ativas
+                        </th>
                     </tr>
                 </thead>
 
                 <tbody>
                     {% for aluno in alunos %}
                     <tr class="border-b hover:bg-gray-50">
-                        <td class="p-4">{{ aluno.id }}</td>
-                        <td class="p-4">{{ aluno.nome }}</td>
-                        <td class="p-4">{{ aluno.email }}</td>
-                        <td class="p-4">{{ aluno.cpf }}</td>
-                        <td class="p-4">{{ aluno.telefone or '-' }}</td>
-                        <td class="p-4">{{ aluno.data_nascimento.strftime('%d/%m/%Y') }}</td>
+                        <td class="p-4">
+                            {{ aluno.id }}
+                        </td>
+                        <td class="p-4">
+                            {{ aluno.nome }}
+                        </td>
+                        <td class="p-4">
+                            {{ aluno.email }}
+                        </td>
+                        <td class="p-4">
+                            {{ aluno.cpf }}
+                        </td>
+                        <td class="p-4">
+                            {{ aluno.telefone or '-' }}
+                        </td>
+                        <td class="p-4">
+                            {{ aluno.data_nascimento.strftime('%d/%m/%Y') }}
+                        </td>
                         <td class="p-4">
                             {{ aluno.matriculas | selectattr('status', 'equalto', 'Ativa') | list | length }}
                         </td>

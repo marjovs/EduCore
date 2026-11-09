@@ -1,82 +1,82 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EduCore | Editar Aluno</title>
-<script src="https://cdn.tailwindcss.com"></script>
-</head>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>
+            EduCore | Editar Aluno
+        </title>
 
-<body class="bg-slate-100 min-h-screen p-6">
+        <script src="https://cdn.tailwindcss.com"></script>
+    </head>
+    <body class="bg-slate-100 min-h-screen p-6">
+        <main class="max-w-2xl mx-auto bg-white p-8 rounded-2xl shadow">
+            <a href="{{ url_for('alunos.listar') }}" class="text-blue-700 hover:underlinebg-purple-600 hover:bg-purple-700 text-white px-5 py-2 rounded-lg">
+                Voltar para alunos
+            </a>
 
-<main class="max-w-2xl mx-auto bg-white p-8 rounded-2xl shadow">
+            <h1 class="text-2xl font-bold text-gray-800 mt-5 mb-6">
+                Editar aluno
+            </h1>
 
-<a href="{{ url_for('alunos.listar') }}"
-class="text-blue-700 hover:underline">
-← Voltar para alunos
-</a>
+            {% with mensagens = get_flashed_messages() %}
+            {% if mensagens %}
+            {% for mensagem in mensagens %}
+            <p class="text-red-600 mb-4">
+                {{ mensagem }}
+            </p>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
 
-<h1 class="text-2xl font-bold text-gray-800 mt-5 mb-6">
-Editar aluno
-</h1>
+            <form method="POST" class="space-y-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-{% with mensagens = get_flashed_messages() %}
-{% if mensagens %}
-{% for mensagem in mensagens %}
-<p class="text-red-600 mb-4">{{ mensagem }}</p>
-{% endfor %}
-{% endif %}
-{% endwith %}
+                <div>
+                    <label class="block mb-1 font-medium">
+                        Nome completo *
+                    </label>
 
-<form method="POST" class="space-y-4">
-<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="text" name="nome" required value="{{ aluno.nome }}" class="w-full border rounded-lg p-3">
+                </div>
 
-<div>
-<label class="block mb-1 font-medium">Nome completo *</label>
-<input type="text" name="nome" required
-value="{{ aluno.nome }}"
-class="w-full border rounded-lg p-3">
-</div>
+                <div>
+                    <label class="block mb-1 font-medium">
+                        E-mail *
+                    </label>
 
-<div>
-<label class="block mb-1 font-medium">E-mail *</label>
-<input type="email" name="email" required
-value="{{ aluno.email }}"
-class="w-full border rounded-lg p-3">
-</div>
+                    <input type="email" name="email" required value="{{ aluno.email }}" class="w-full border rounded-lg p-3">
+                </div>
 
-<div>
-<label class="block mb-1 font-medium">CPF *</label>
-<input type="text" name="cpf" required
-value="{{ aluno.cpf }}"
-class="w-full border rounded-lg p-3">
-</div>
+                <div>
+                    <label class="block mb-1 font-medium">
+                        CPF *
+                    </label>
 
-<div>
-<label class="block mb-1 font-medium">Telefone</label>
-<input type="text" name="telefone"
-value="{{ aluno.telefone or '' }}"
-class="w-full border rounded-lg p-3">
-</div>
+                    <input type="text" name="cpf" required value="{{ aluno.cpf }}" class="w-full border rounded-lg p-3">
+                </div>
 
-<div>
-<label class="block mb-1 font-medium">
-Data de nascimento *
-</label>
-<input type="date" name="data_nascimento" required
-value="{{ aluno.data_nascimento.strftime('%Y-%m-%d') }}"
-class="w-full border rounded-lg p-3">
-</div>
+                <div>
+                    <label class="block mb-1 font-medium">
+                        Telefone
+                    </label>
 
-<button type="submit"
-class="w-full bg-blue-700 text-white py-3 rounded-lg
-hover:bg-blue-800 font-semibold">
-Salvar alterações
-</button>
+                    <input type="text" name="telefone"
+                    value="{{ aluno.telefone or '' }}" class="w-full border rounded-lg p-3">
+                </div>
 
-</form>
+                <div>
+                    <label class="block mb-1 font-medium">
+                        Data de nascimento *
+                    </label>
 
-</main>
+                    <input type="date" name="data_nascimento" required value="{{ aluno.data_nascimento.strftime('%Y-%m-%d') }}" class="w-full border rounded-lg p-3">
+                </div>
 
-</body>
+                <button type="submit" class="w-full bg-blue-700 text-white py-3 rounded-lg hover:bg-blue-800 font-semibold">
+                    Salvar alterações
+                </button>
+            </form>
+        </main>
+    </body>
 </html>

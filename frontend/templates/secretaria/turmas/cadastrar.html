@@ -1,88 +1,98 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EduCore | Cadastrar Turma</title>
-<script src="https://cdn.tailwindcss.com"></script>
-</head>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>
+            EduCore | Cadastrar Turma
+        </title>
+        
+        <script src="https://cdn.tailwindcss.com"></script>
+    </head>
+    <body class="bg-gray-100 min-h-screen p-6">
+        <div class="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow">
+            <h1 class="text-2xl font-bold text-blue-700 mb-6">
+                Cadastrar Turma
+            </h1>
 
-<body class="bg-gray-100 min-h-screen p-6">
+            {% with mensagens = get_flashed_messages() %}
+            {% if mensagens %}
+            {% for mensagem in mensagens %}
+            <p class="bg-blue-100 text-blue-700 p-3 rounded mb-4">
+                {{ mensagem }}
+            </p>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
 
-<div class="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow">
+            <form method="POST" class="space-y-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-<h1 class="text-2xl font-bold text-blue-700 mb-6">
-Cadastrar Turma
-</h1>
+                <div>
+                    <label class="block font-medium mb-1">
+                        Nome da 
+                    </label>
+                    
+                    <input type="text" name="nome" required placeholder="Ex.: Turma A" class="w-full border rounded-lg p-3">
+                </div>
 
-{% with mensagens = get_flashed_messages() %}
-{% if mensagens %}
-{% for mensagem in mensagens %}
-<p class="bg-blue-100 text-blue-700 p-3 rounded mb-4">
-{{ mensagem }}
-</p>
-{% endfor %}
-{% endif %}
-{% endwith %}
+                <div>
+                    <label class="block font-medium mb-1">
+                        Curso
+                    </label>
 
-<form method="POST" class="space-y-4">
-<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <select name="curso_id" required class="w-full border rounded-lg p-3">
+                        <option value="">
+                            Selecione um curso
+                        </option>
 
-<div>
-<label class="block font-medium mb-1">Nome da Turma</label>
-<input type="text" name="nome" required
-placeholder="Ex.: Turma A"
-class="w-full border rounded-lg p-3">
-</div>
+                        {% for curso in cursos %}
+                        <option value="{{ curso.id }}">
+                            {{ curso.nome }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
 
-<div>
-<label class="block font-medium mb-1">Curso</label>
-<select name="curso_id" required
-class="w-full border rounded-lg p-3">
-<option value="">Selecione um curso</option>
+                <div>
+                    <label class="block font-medium mb-1">
+                        Ano
+                    </label>
+                    
+                    <input type="number" name="ano" required min="2000" max="2100" placeholder="2026" class="w-full border rounded-lg p-3">
+                </div>
 
-{% for curso in cursos %}
-<option value="{{ curso.id }}">
-{{ curso.nome }}
-</option>
-{% endfor %}
-</select>
-</div>
+                <div>
+                    <label class="block font-medium mb-1">
+                        Turno
+                    </label>
 
-<div>
-<label class="block font-medium mb-1">Ano</label>
-<input type="number" name="ano" required
-min="2000" max="2100"
-placeholder="2026"
-class="w-full border rounded-lg p-3">
-</div>
+                    <select name="turno" required class="w-full border rounded-lg p-3">
+                        <option value="">
+                            Selecione o turno
+                        </option>
+                        <option value="Matutino">
+                            Matutino
+                        </option>
+                        <option value="Vespertino">
+                            Vespertino
+                        </option>
+                        <option value="Noturno">
+                            Noturno
+                        </option>
+                    </select>
+                </div>
 
-<div>
-<label class="block font-medium mb-1">Turno</label>
-<select name="turno" required
-class="w-full border rounded-lg p-3">
-<option value="">Selecione o turno</option>
-<option value="Matutino">Matutino</option>
-<option value="Vespertino">Vespertino</option>
-<option value="Noturno">Noturno</option>
-</select>
-</div>
+                <div class="flex gap-3 pt-4">
+                    <button type="submit" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700">
+                        Cadastrar
+                    </button>
 
-<div class="flex gap-3 pt-4">
-<button type="submit"
-class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700">
-Cadastrar
-</button>
-
-<a href="{{ url_for('turmas.listar') }}"
-class="bg-gray-200 px-6 py-3 rounded-lg hover:bg-gray-300">
-Voltar
-</a>
-</div>
-
-</form>
-
-</div>
-
-</body>
+                    <a href="{{ url_for('turmas.listar') }}" class="bg-gray-200 px-6 py-3 rounded-lg hover:bg-gray-300">
+                        Voltar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </body>
 </html>

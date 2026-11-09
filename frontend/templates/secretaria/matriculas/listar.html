@@ -1,130 +1,127 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EduCore | Matrículas</title>
-<script src="https://cdn.tailwindcss.com"></script>
-</head>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>
+            EduCore | Matrículas
+        </title>
 
-<body class="bg-gray-100 min-h-screen p-6">
+        <script src="https://cdn.tailwindcss.com"></script>
+    </head>
+    <body class="bg-gray-100 min-h-screen p-6">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-3xl font-bold text-blue-700">
+                    Gerenciamento de Matrículas
+                </h1>
 
-<div class="max-w-7xl mx-auto">
+                <a href="{{ url_for('matriculas.cadastrar') }}" class="bg-blue-600 text-white px-5 py-3 rounded-lg hover:bg-blue-700"> 
+                    + Nova Matrícula
+                </a>
+            </div>
 
-<div class="flex justify-between items-center mb-6">
+            {% with mensagens = get_flashed_messages() %}
+            {% if mensagens %}
+            {% for mensagem in mensagens %}
+            <p class="bg-blue-100 text-blue-700 p-3 rounded mb-4">
+                {{ mensagem }}
+            </p>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
 
-<h1 class="text-3xl font-bold text-blue-700">
-Gerenciamento de Matrículas
-</h1>
+            <div class="bg-white rounded-xl shadow overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead class="bg-blue-100 text-blue-800">
+                        <tr>
+                            <th class="p-4">
+                                ID
+                            </th>
+                            <th class="p-4">
+                                Aluno
+                            </th>
+                            <th class="p-4">
+                                Curso
+                            </th>
+                            <th class="p-4">
+                                Turma
+                            </th>
+                            <th class="p-4">
+                                Data
+                            </th>
+                            <th class="p-4">
+                                Status
+                            </th>
+                            <th class="p-4">
+                                Ações
+                            </th>
+                        </tr>
+                    </thead>
 
-<a href="{{ url_for('matriculas.cadastrar') }}"
-class="bg-blue-600 text-white px-5 py-3 rounded-lg hover:bg-blue-700">
-+ Nova Matrícula
-</a>
+                    <tbody>
+                        {% for matricula in matriculas %}
+                        <tr class="border-t hover:bg-gray-50">
+                            <td class="p-4">
+                                {{ matricula.id }}
+                            </td>
+                            <td class="p-4">
+                                {{ matricula.aluno.nome }}
+                            </td>
+                            <td class="p-4">
+                                {{ matricula.turma.curso.nome }}
+                            </td>
+                            <td class="p-4">
+                                {{ matricula.turma.nome }}
+                            </td>
+                            <td class="p-4">
+                                {{ matricula.data_matricula.strftime('%d/%m/%Y') }}
+                            </td>
+                            <td class="p-4">
+                                {{ matricula.status }}
+                            </td>
+                            <td class="p-4">
+                                {% if matricula.status == "Ativa" %}
+                                <details class="inline-block">
+                                    <summary class="cursor-pointer list-none [&::-webkit-details-marker]:hidden text-red-600 hover:underline font-medium">Cancelar</summary>
+                                    
+                                    <form method="POST" action="{{ url_for('matriculas.cancelar', id=matricula.id) }}" class="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm whitespace-normal w-56">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        
+                                        <p class="text-gray-700 mb-2">
+                                            Deseja realmente cancelar esta matrícula?
+                                        </p>
 
-</div>
+                                        <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded">
+                                            Sim, cancelar
+                                        </button>
+                                    </form>
+                                </details>
 
-{% with mensagens = get_flashed_messages() %}
-{% if mensagens %}
-{% for mensagem in mensagens %}
-<p class="bg-blue-100 text-blue-700 p-3 rounded mb-4">
-{{ mensagem }}
-</p>
-{% endfor %}
-{% endif %}
-{% endwith %}
+                                {% else %}
 
-<div class="bg-white rounded-xl shadow overflow-x-auto">
+                                <span class="text-gray-500">
+                                    Sem ações
+                                </span>
+                                {% endif %}
+                            </td>
+                        </tr>
 
-<table class="w-full text-left">
+                        {% else %}
 
-<thead class="bg-blue-100 text-blue-800">
-<tr>
-<th class="p-4">ID</th>
-<th class="p-4">Aluno</th>
-<th class="p-4">Curso</th>
-<th class="p-4">Turma</th>
-<th class="p-4">Data</th>
-<th class="p-4">Status</th>
-<th class="p-4">Ações</th>
-</tr>
-</thead>
+                        <tr>
+                            <td colspan="7" class="p-6 text-center text-gray-500">
+                                Nenhuma matrícula cadastrada.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
 
-<tbody>
-
-{% for matricula in matriculas %}
-
-<tr class="border-t hover:bg-gray-50">
-
-<td class="p-4">{{ matricula.id }}</td>
-
-<td class="p-4">
-{{ matricula.aluno.nome }}
-</td>
-
-<td class="p-4">
-{{ matricula.turma.curso.nome }}
-</td>
-
-<td class="p-4">
-{{ matricula.turma.nome }}
-</td>
-
-<td class="p-4">
-{{ matricula.data_matricula.strftime('%d/%m/%Y') }}
-</td>
-
-<td class="p-4">
-{{ matricula.status }}
-</td>
-
-<td class="p-4">
-
-{% if matricula.status == "Ativa" %}
-
-<details class="inline-block">
-<summary class="cursor-pointer list-none [&::-webkit-details-marker]:hidden text-red-600 hover:underline font-medium">Cancelar</summary>
-<form method="POST" action="{{ url_for('matriculas.cancelar', id=matricula.id) }}" class="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm whitespace-normal w-56">
-<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-<p class="text-gray-700 mb-2">Deseja realmente cancelar esta matrícula?</p>
-<button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded">Sim, cancelar</button>
-</form>
-</details>
-
-{% else %}
-
-<span class="text-gray-500">
-Sem ações
-</span>
-
-{% endif %}
-
-</td>
-
-</tr>
-
-{% else %}
-
-<tr>
-<td colspan="7" class="p-6 text-center text-gray-500">
-Nenhuma matrícula cadastrada.
-</td>
-</tr>
-
-{% endfor %}
-
-</tbody>
-
-</table>
-
-</div>
-
-<a href="{{ url_for('secretaria.painel') }}"
-class="inline-block mt-6 text-blue-600 hover:underline">
-← Voltar ao painel
-</a>
-
-</div>
-
-</body>
+            <a href="{{ url_for('secretaria.painel') }}" class="inline-block mt-6 text-blue-600 hover:underline">
+                Voltar ao painel
+            </a>
+        </div>
+    </body>
 </html>

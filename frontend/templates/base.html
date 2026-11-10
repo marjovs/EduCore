@@ -8,20 +8,7 @@
         </title>
 
         <script src="https://cdn.tailwindcss.com"></script>
-        <script>
-            // Ativa o modo escuro via classe "dark" no <html>
-            tailwind.config = { darkMode: 'class' };
-
-            // Aplica o tema salvo antes da página renderizar (evita "piscar")
-            (function () {
-                let tema = null;
-                try { tema = localStorage.getItem('tema'); } catch (e) {}
-                const prefereEscuro = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                if (tema === 'dark' || (!tema && prefereEscuro)) {
-                    document.documentElement.classList.add('dark');
-                }
-            })();
-        </script>
+        {% include "_tema.html" %}
     </head>
     <body class="bg-gray-100 min-h-screen">
         <!-- Cabeçalho -->
@@ -30,20 +17,12 @@
                 <a href="{{ url_for('auth.dashboard') }}" class="text-2xl font-bold tracking-wide">
                     EduCore
                 </a>
-                {% if session.get('usuario') %}
+                {% import "_botao_tema.html" as tema %}
                 <div class="flex items-center gap-4">
-                    <!-- Botão de alternar tema -->
-                    <button id="btn-tema" type="button" aria-label="Alternar modo escuro/claro"
+                    <!-- Botão de alternar tema (o clique é tratado em _tema.html) -->
+                    <button type="button" data-alternar-tema title="Alternar modo claro/escuro" aria-label="Alternar modo claro/escuro"
                         class="p-2 rounded-lg bg-purple-800 hover:bg-purple-900 dark:bg-purple-700 dark:hover:bg-purple-600 transition">
-                        <!-- Ícone lua (aparece no modo claro) -->
-                        <svg id="icone-lua" class="w-5 h-5 dark:hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
-                        </svg>
-                        <!-- Ícone sol (aparece no modo escuro) -->
-                        <svg id="icone-sol" class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <circle cx="12" cy="12" r="4" />
-                            <path stroke-linecap="round" d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41" />
-                        </svg>
+                        {{ tema.icones() }}
                     </button>
 
                     {% if session.get('usuario') %}
@@ -56,7 +35,6 @@
                     </a>
                     {% endif %}
                 </div>
-                {% endif %}
             </div>
         </header>
 
@@ -70,13 +48,5 @@
         <footer class="text-center text-gray-500 text-sm py-6">
             EduCore © 2026 | Sistema de Gestão Acadêmica
         </footer>
-
-        <script>
-            // Alterna entre claro e escuro e salva a escolha
-            document.getElementById('btn-tema').addEventListener('click', function () {
-                const escuro = document.documentElement.classList.toggle('dark');
-                try { localStorage.setItem('tema', escuro ? 'dark' : 'light'); } catch (e) {}
-            });
-        </script>
     </body>
 </html>

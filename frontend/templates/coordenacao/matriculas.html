@@ -19,6 +19,10 @@
             </a>
         </div>
 
+        {% with endpoint = 'coordenacao.matriculas', cor = 'purple', placeholder = 'Aluno, CPF, turma ou curso' %}
+        {% include "_filtros.html" %}
+        {% endwith %}
+
         <div class="bg-white rounded-xl shadow overflow-x-auto">
             <table class="w-full text-left">
                 <thead class="bg-purple-100 text-purple-800">
@@ -43,9 +47,9 @@
                         </th>
                     </tr>
                 </thead>
-                
+
                 <tbody>
-                    {% for matricula in matriculas %}
+                    {% for matricula in pagina.items %}
                     <tr class="border-b hover:bg-gray-50">
                         <td class="p-4">
                             {{ matricula.id }}
@@ -77,13 +81,21 @@
                     {% else %}
                     <tr>
                         <td colspan="6" class="p-6 text-center text-gray-500">
+                            {% if filtros.busca or filtros.ano or filtros.status %}
+                            Nenhuma matrícula encontrada para esta busca.
+                            {% else %}
                             Nenhuma matrícula cadastrada.
+                            {% endif %}
                         </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
+
+        {% with cor = 'purple' %}
+        {% include "_paginacao.html" %}
+        {% endwith %}
     </div>
 </div>
 {% endblock %}

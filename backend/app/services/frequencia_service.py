@@ -1,25 +1,11 @@
 from sqlalchemy import case, func
-from sqlalchemy.orm import contains_eager, joinedload
+from sqlalchemy.orm import contains_eager
 
 from app import db
 from app.models.frequencia import Frequencia
 from app.models.matricula import Matricula
 from app.models.turma import Turma
 from app.services.busca import condicao_busca, paginar
-
-
-def listar_frequencias():
-    return (
-        Frequencia.query
-        .options(
-            joinedload(Frequencia.matricula).joinedload(Matricula.aluno),
-            joinedload(Frequencia.matricula)
-            .joinedload(Matricula.turma)
-            .joinedload(Turma.curso),
-        )
-        .order_by(Frequencia.data.desc())
-        .all()
-    )
 
 
 def _consulta_filtrada(consulta, busca=None, turma_id=None, ano=None):

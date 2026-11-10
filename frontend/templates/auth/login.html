@@ -8,6 +8,7 @@
         </title>
 
         <script src="https://cdn.tailwindcss.com"></script>
+        {% include "_tema.html" %}
     </head>
     <body class="min-h-screen bg-slate-100 flex items-center justify-center p-4">
         <main class="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
@@ -59,5 +60,7 @@
                 EduCore © 2026
             </footer>
         </main>
+        {% import "_botao_tema.html" as tema %}
+        {{ tema.flutuante() }}
     </body>
 </html>

@@ -1,8 +1,19 @@
 {#
-    Barra de busca das listagens da secretaria.
-    Espera: endpoint, filtros, anos. Opcionais: turmas (mostra o select de turma),
-    campos_ocultos (dict de parâmetros a preservar), placeholder.
+    Barra de busca das listagens (secretaria e coordenação).
+    Espera: endpoint, filtros.
+    Opcionais:
+      anos           -> mostra o select de ano
+      turmas         -> mostra o select de turma (agrupado por ano)
+      status_opcoes  -> mostra o select de status (ex.: Ativa / Cancelada)
+      campos_ocultos -> dict de parâmetros a preservar ao buscar/limpar
+      placeholder    -> texto de exemplo do campo de busca
+      cor            -> 'blue' (padrão, secretaria) ou 'purple' (coordenação)
 #}
+{% set botao_cor = {
+    'blue': 'bg-blue-600 hover:bg-blue-700',
+    'purple': 'bg-purple-600 hover:bg-purple-700',
+}[cor or 'blue'] %}
+
 <form method="GET" action="{{ url_for(endpoint) }}" class="bg-white rounded-xl shadow p-4 mb-6 flex flex-col lg:flex-row gap-4 lg:items-end">
     {% for nome, valor in (campos_ocultos or {}).items() %}
     <input type="hidden" name="{{ nome }}" value="{{ valor }}">
@@ -17,6 +28,7 @@
             class="w-full border border-gray-300 rounded-lg p-2">
     </label>
 
+    {% if anos is defined %}
     <label class="flex-1">
         <span class="block text-sm font-medium text-gray-700 mb-1">
             Ano
@@ -29,6 +41,7 @@
             {% endfor %}
         </select>
     </label>
+    {% endif %}
 
     {% if turmas is defined %}
     <label class="flex-[2]">
@@ -51,12 +64,27 @@
     </label>
     {% endif %}
 
+    {% if status_opcoes is defined %}
+    <label class="flex-1">
+        <span class="block text-sm font-medium text-gray-700 mb-1">
+            Status
+        </span>
+
+        <select name="status" class="w-full border border-gray-300 rounded-lg p-2">
+            <option value="">Todos</option>
+            {% for opcao in status_opcoes %}
+            <option value="{{ opcao }}" {{ 'selected' if filtros.status == opcao }}>{{ opcao }}</option>
+            {% endfor %}
+        </select>
+    </label>
+    {% endif %}
+
     <div class="flex gap-2">
-        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg">
+        <button type="submit" class="{{ botao_cor }} text-white px-5 py-2 rounded-lg">
             Buscar
         </button>
 
-        {% if filtros.busca or filtros.ano or filtros.turma_id %}
+        {% if filtros.busca or filtros.ano or filtros.turma_id or filtros.status %}
         <a href="{{ url_for(endpoint, **(campos_ocultos or {})) }}" class="px-5 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50">
             Limpar
         </a>

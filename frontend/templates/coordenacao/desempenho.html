@@ -19,6 +19,32 @@
             </a>
         </div>
 
+        {% with endpoint = 'coordenacao.desempenho', cor = 'purple' %}
+        {% include "_filtros.html" %}
+        {% endwith %}
+
+        <section class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+            <div class="bg-white rounded-xl shadow p-4">
+                <p class="text-sm text-gray-500">
+                    Notas encontradas
+                </p>
+
+                <p class="text-2xl font-bold text-gray-800">
+                    {{ resumo.total }}
+                </p>
+            </div>
+
+            <div class="bg-white rounded-xl shadow p-4">
+                <p class="text-sm text-gray-500">
+                    Média
+                </p>
+
+                <p class="text-2xl font-bold {{ 'text-gray-400' if resumo.media is none else ('text-green-700' if resumo.media >= 6 else 'text-red-600') }}">
+                    {{ '-' if resumo.media is none else "%.1f"|format(resumo.media) }}
+                </p>
+            </div>
+        </section>
+
         <div class="bg-white rounded-xl shadow overflow-x-auto">
             <table class="w-full text-left">
                 <thead class="bg-purple-100 text-purple-800">
@@ -45,7 +71,7 @@
                 </thead>
 
                 <tbody>
-                    {% for nota in notas %}
+                    {% for nota in pagina.items %}
                     <tr class="border-b hover:bg-gray-50">
                         <td class="p-4">
                             {{ nota.matricula.aluno.nome }}
@@ -71,13 +97,17 @@
                     {% else %}
                     <tr>
                         <td colspan="6" class="p-6 text-center text-gray-500">
-                            Nenhuma nota registrada.
+                            Nenhuma nota encontrada.
                         </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
+
+        {% with cor = 'purple' %}
+        {% include "_paginacao.html" %}
+        {% endwith %}
     </div>
 </div>
 {% endblock %}

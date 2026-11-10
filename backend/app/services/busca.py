@@ -35,4 +35,5 @@ def condicao_busca(texto, incluir_turma_curso=False):
 
 
 def paginar(consulta, pagina):
+    """Pagina uma consulta do ORM (Model.query ou db.session.query)."""
     return consulta.paginate(page=pagina, per_page=POR_PAGINA, error_out=False)

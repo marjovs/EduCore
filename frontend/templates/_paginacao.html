@@ -1,4 +1,13 @@
-{# Navegação entre páginas. Espera: pagina (objeto Pagination). Mantém os filtros da URL. #}
+{#
+    Navegação entre páginas. Espera: pagina (objeto Pagination).
+    Opcional: cor -> 'blue' (padrão, secretaria) ou 'purple' (coordenação).
+    Mantém os filtros da URL ao trocar de página.
+#}
+{% set estilo = {
+    'blue': {'link': 'text-blue-700 hover:bg-blue-50', 'atual': 'bg-blue-600'},
+    'purple': {'link': 'text-purple-700 hover:bg-purple-50', 'atual': 'bg-purple-600'},
+}[cor or 'blue'] %}
+
 {% if pagina.pages > 1 %}
 {% set args = request.args.to_dict() %}
 <nav class="flex flex-wrap items-center justify-between gap-4 mt-4 text-sm">
@@ -8,7 +17,7 @@
 
     <div class="flex flex-wrap gap-1">
         {% if pagina.has_prev %}
-        <a href="{{ url_for(request.endpoint, **dict(args, pagina=pagina.prev_num)) }}" class="px-3 py-1 rounded-lg bg-white shadow text-blue-700 hover:bg-blue-50">
+        <a href="{{ url_for(request.endpoint, **dict(args, pagina=pagina.prev_num)) }}" class="px-3 py-1 rounded-lg bg-white shadow {{ estilo.link }}">
             ‹ Anterior
         </a>
         {% endif %}
@@ -17,16 +26,16 @@
         {% if numero is none %}
         <span class="px-2 py-1 text-gray-400">…</span>
         {% elif numero == pagina.page %}
-        <span class="px-3 py-1 rounded-lg bg-blue-600 text-white">{{ numero }}</span>
+        <span class="px-3 py-1 rounded-lg {{ estilo.atual }} text-white">{{ numero }}</span>
         {% else %}
-        <a href="{{ url_for(request.endpoint, **dict(args, pagina=numero)) }}" class="px-3 py-1 rounded-lg bg-white shadow text-blue-700 hover:bg-blue-50">
+        <a href="{{ url_for(request.endpoint, **dict(args, pagina=numero)) }}" class="px-3 py-1 rounded-lg bg-white shadow {{ estilo.link }}">
             {{ numero }}
         </a>
         {% endif %}
         {% endfor %}
 
         {% if pagina.has_next %}
-        <a href="{{ url_for(request.endpoint, **dict(args, pagina=pagina.next_num)) }}" class="px-3 py-1 rounded-lg bg-white shadow text-blue-700 hover:bg-blue-50">
+        <a href="{{ url_for(request.endpoint, **dict(args, pagina=pagina.next_num)) }}" class="px-3 py-1 rounded-lg bg-white shadow {{ estilo.link }}">
             Próxima ›
         </a>
         {% endif %}

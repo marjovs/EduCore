@@ -7,22 +7,11 @@ from app.models.turma import Turma
 from app.services.busca import condicao_busca, paginar
 
 
-def listar_matriculas(status=None):
-    consulta = Matricula.query.options(
-        joinedload(Matricula.aluno),
-        joinedload(Matricula.turma).joinedload(Turma.curso),
-    )
+def buscar_matriculas(status=None, busca=None, ano=None, pagina=1):
+    """Lista paginada de matrículas com busca por aluno, CPF, turma ou curso.
 
-    if status:
-        consulta = consulta.filter(Matricula.status == status)
-
-    return consulta.order_by(
-        Matricula.data_matricula.desc(), Matricula.id.desc()
-    ).all()
-
-
-def buscar_matriculas(status, busca=None, ano=None, pagina=1):
-    """Lista paginada de matrículas com busca por aluno, CPF, turma ou curso."""
+    status=None traz matrículas de qualquer status.
+    """
     consulta = (
         Matricula.query
         .join(Matricula.aluno)
@@ -32,8 +21,10 @@ def buscar_matriculas(status, busca=None, ano=None, pagina=1):
             contains_eager(Matricula.aluno),
             contains_eager(Matricula.turma).contains_eager(Turma.curso),
         )
-        .filter(Matricula.status == status)
     )
+
+    if status:
+        consulta = consulta.filter(Matricula.status == status)
 
     if busca:
         consulta = consulta.filter(condicao_busca(busca, incluir_turma_curso=True))

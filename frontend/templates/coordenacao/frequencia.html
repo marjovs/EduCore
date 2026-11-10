@@ -19,6 +19,42 @@
             </a>
         </div>
 
+        {% with endpoint = 'coordenacao.frequencia', cor = 'purple' %}
+        {% include "_filtros.html" %}
+        {% endwith %}
+
+        <section class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+            <div class="bg-white rounded-xl shadow p-4">
+                <p class="text-sm text-gray-500">
+                    Presenças
+                </p>
+
+                <p class="text-2xl font-bold text-green-700">
+                    {{ resumo.presencas }}
+                </p>
+            </div>
+
+            <div class="bg-white rounded-xl shadow p-4">
+                <p class="text-sm text-gray-500">
+                    Faltas
+                </p>
+
+                <p class="text-2xl font-bold text-red-600">
+                    {{ resumo.faltas }}
+                </p>
+            </div>
+
+            <div class="bg-white rounded-xl shadow p-4">
+                <p class="text-sm text-gray-500">
+                    Frequência
+                </p>
+
+                <p class="text-2xl font-bold {{ 'text-gray-400' if resumo.percentual is none else ('text-green-700' if resumo.percentual >= 75 else 'text-red-600') }}">
+                    {{ '-' if resumo.percentual is none else "%.0f%%"|format(resumo.percentual) }}
+                </p>
+            </div>
+        </section>
+
         <div class="bg-white rounded-xl shadow overflow-x-auto">
             <table class="w-full text-left">
                 <thead class="bg-purple-100 text-purple-800">
@@ -42,7 +78,7 @@
                 </thead>
 
                 <tbody>
-                    {% for frequencia in frequencias %}
+                    {% for frequencia in pagina.items %}
                     <tr class="border-b hover:bg-gray-50">
                         <td class="p-4">
                             {{ frequencia.matricula.aluno.nome }}
@@ -70,7 +106,7 @@
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="6" class="p-6 text-center text-gray-500">
+                        <td colspan="5" class="p-6 text-center text-gray-500">
                             Nenhum registro de frequência encontrado.
                         </td>
                     </tr>
@@ -78,6 +114,10 @@
                 </tbody>
             </table>
         </div>
+
+        {% with cor = 'purple' %}
+        {% include "_paginacao.html" %}
+        {% endwith %}
     </div>
 </div>
 {% endblock %}

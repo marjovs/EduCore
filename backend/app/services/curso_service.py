@@ -2,7 +2,7 @@ from sqlalchemy import func
 
 from app import db
 from app.models.curso import Curso
-from app.services import RegraNegocioError
+from app.services import RegraNegocioError, obter_ou_404
 
 
 def listar_cursos():
@@ -14,7 +14,7 @@ def listar_cursos_ativos():
 
 
 def buscar_curso(curso_id):
-    return db.get_or_404(Curso, curso_id)
+    return obter_ou_404(Curso, curso_id)
 
 
 def _validar_nome(nome, curso_id=None):

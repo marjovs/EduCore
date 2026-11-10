@@ -4,7 +4,7 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>
-            EduCore | Registrar Notas
+            EduCore | Registrar notas
         </title>
 
         <script src="https://cdn.tailwindcss.com"></script>
@@ -14,7 +14,7 @@
         <div class="max-w-6xl mx-auto">
             <div class="bg-white rounded-xl shadow p-8">
             <h1 class="text-2xl font-bold text-blue-700 mb-2">
-                Registrar Notas
+                Registrar notas
             </h1>
 
             <p class="text-gray-600 mb-6">
@@ -40,7 +40,7 @@
                             Nome da avaliação
                         </label>
 
-                        <input type="text" name="avaliacao" required placeholder="Ex.: Prova 1" class="w-full border rounded-lg p-3">
+                        <input type="text" name="avaliacao" required maxlength="100" placeholder="Ex.: Prova 1" class="w-full border rounded-lg p-3">
                     </div>
 
                     <div>
@@ -75,7 +75,7 @@
                                     {{ matricula.aluno.nome }}
                                 </td>
                                 <td class="p-4">
-                                    {{ matricula.aluno.cpf }}
+                                    {{ matricula.aluno.cpf|cpf }}
                                 </td>
                                 <td class="p-4">
                                     <input type="number" name="nota_{{ matricula.id }}" min="0" max="10" step="0.1" required placeholder="0,0" class="border rounded-lg p-2 w-32">

@@ -14,6 +14,11 @@ def _somente_digitos(texto):
     return re.sub(r"\D", "", texto)
 
 
+def cpf_sem_pontuacao():
+    """Expressão SQL do CPF sem pontos e traço."""
+    return func.replace(func.replace(Aluno.cpf, ".", ""), "-", "")
+
+
 def condicao_busca(texto, incluir_turma_curso=False):
     """Condição SQL para buscar por nome do aluno ou CPF (com ou sem pontuação).
 
@@ -25,8 +30,7 @@ def condicao_busca(texto, incluir_turma_curso=False):
 
     digitos = _somente_digitos(texto)
     if digitos:
-        cpf_sem_pontuacao = func.replace(func.replace(Aluno.cpf, ".", ""), "-", "")
-        condicoes.append(cpf_sem_pontuacao.like("%" + digitos + "%"))
+        condicoes.append(cpf_sem_pontuacao().like("%" + digitos + "%"))
 
     if incluir_turma_curso:
         condicoes += [Turma.nome.ilike(termo), Curso.nome.ilike(termo)]

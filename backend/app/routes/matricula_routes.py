@@ -6,6 +6,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from app import db
 from app.acesso import perfil_required
 from app.routes.filtros import ler_filtros
+from app.validacao import inteiro_seguro
 from app.services import aluno_service, matricula_service, turma_service
 
 matriculas = Blueprint("matriculas", __name__, url_prefix="/secretaria/matriculas")
@@ -59,11 +60,11 @@ def cadastrar():
         )
 
     if request.method == "POST":
-        aluno_id = request.form.get("aluno_id", "").strip()
-        turma_id = request.form.get("turma_id", "").strip()
+        aluno_id = inteiro_seguro(request.form.get("aluno_id"))
+        turma_id = inteiro_seguro(request.form.get("turma_id"))
 
-        aluno = aluno_service.buscar_aluno(int(aluno_id)) if aluno_id.isdigit() else None
-        turma = turma_service.buscar_turma(int(turma_id)) if turma_id.isdigit() else None
+        aluno = aluno_service.buscar_aluno(aluno_id) if aluno_id else None
+        turma = turma_service.buscar_turma(turma_id) if turma_id else None
 
         if not aluno or not turma:
             flash("Selecione o aluno e a turma.")

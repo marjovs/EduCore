@@ -7,6 +7,14 @@ from app import db
 from app.acesso import perfil_required
 from app.routes.filtros import ler_filtros
 from app.services import RegraNegocioError, aluno_service
+from app.validacao import (
+    cpf_valido,
+    data_nascimento_valida,
+    email_valido,
+    formatar_cpf,
+    somente_digitos,
+    texto_grande_demais,
+)
 
 alunos = Blueprint("alunos", __name__, url_prefix="/secretaria/alunos")
 
@@ -22,15 +30,33 @@ def _ler_formulario():
     if not all([nome, email, cpf, nascimento]):
         return None, "Preencha todos os campos obrigatórios."
 
+    erro = texto_grande_demais({
+        "Nome": (nome, 120),
+        "E-mail": (email, 120),
+        "Telefone": (telefone, 20),
+    })
+    if erro:
+        return None, erro
+
+    if not email_valido(email):
+        return None, "Informe um e-mail válido."
+
+    if not cpf_valido(cpf):
+        return None, "CPF inválido. Confira os 11 dígitos."
+
     try:
         data_nascimento = datetime.strptime(nascimento, "%Y-%m-%d").date()
     except ValueError:
         return None, "Data de nascimento inválida."
 
+    if not data_nascimento_valida(data_nascimento):
+        return None, "A data de nascimento não pode ser no futuro nem antes de 1900."
+
     return {
         "nome": nome,
         "email": email,
-        "cpf": cpf,
+        # Guardado só com os dígitos; a formatação é feita na tela.
+        "cpf": somente_digitos(cpf),
         "telefone": telefone or None,
         "data_nascimento": data_nascimento
     }, None
@@ -60,7 +86,7 @@ def buscar():
         return jsonify([])
 
     return jsonify([
-        {"id": aluno.id, "nome": aluno.nome, "cpf": aluno.cpf}
+        {"id": aluno.id, "nome": aluno.nome, "cpf": formatar_cpf(aluno.cpf)}
         for aluno in aluno_service.sugerir_alunos(texto)
     ])
 

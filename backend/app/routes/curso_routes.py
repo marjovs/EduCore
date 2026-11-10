@@ -4,6 +4,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from app import db
 from app.acesso import perfil_required
 from app.services import RegraNegocioError, curso_service
+from app.validacao import inteiro_seguro, texto_grande_demais
 
 cursos = Blueprint("cursos", __name__, url_prefix="/secretaria/cursos")
 
@@ -20,14 +21,15 @@ def _ler_formulario():
     status = request.form.get("status", "Ativo")
 
     if not nome or not carga_horaria or not modalidade:
-        return None, "Preencha os campos obrigatórios."
+        return None, "Preencha todos os campos obrigatórios."
 
-    try:
-        carga_horaria = int(carga_horaria)
-        if carga_horaria <= 0:
-            raise ValueError
-    except ValueError:
-        return None, "Informe uma carga horária válida."
+    erro = texto_grande_demais({"Nome do curso": (nome, 120)})
+    if erro:
+        return None, erro
+
+    carga_horaria = inteiro_seguro(carga_horaria)
+    if carga_horaria is None or carga_horaria > 20000:
+        return None, "Informe uma carga horária válida (de 1 a 20000 horas)."
 
     if modalidade not in MODALIDADES:
         return None, "Modalidade inválida."

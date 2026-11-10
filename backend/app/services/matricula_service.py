@@ -4,6 +4,7 @@ from app import db
 from app.models.aluno import Aluno
 from app.models.matricula import Matricula
 from app.models.turma import Turma
+from app.services import obter_ou_404
 from app.services.busca import condicao_busca, paginar
 
 
@@ -68,7 +69,7 @@ def existe_matricula_ativa(aluno_id, turma_id):
 
 
 def buscar_matricula(matricula_id):
-    return db.get_or_404(Matricula, matricula_id)
+    return obter_ou_404(Matricula, matricula_id)
 
 
 def cadastrar_matricula(dados):

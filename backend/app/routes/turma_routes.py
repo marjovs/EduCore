@@ -4,6 +4,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from app import db
 from app.acesso import perfil_required
 from app.services import RegraNegocioError, curso_service, turma_service
+from app.validacao import inteiro_seguro, texto_grande_demais
 
 turmas = Blueprint("turmas", __name__, url_prefix="/secretaria/turmas")
 
@@ -23,14 +24,17 @@ def _ler_formulario(exigir_status):
     if not all(obrigatorios):
         return None, "Preencha todos os campos obrigatórios."
 
-    try:
-        ano = int(ano)
-        curso_id = int(curso_id)
-    except ValueError:
+    ano = inteiro_seguro(ano)
+    curso_id = inteiro_seguro(curso_id)
+    if ano is None or curso_id is None:
         return None, "Ano ou curso inválido."
 
     if ano < 2000 or ano > 2100:
         return None, "Informe um ano válido."
+
+    erro = texto_grande_demais({"Nome da turma": (nome, 100)})
+    if erro:
+        return None, erro
 
     if turno not in TURNOS:
         return None, "Turno inválido."
@@ -77,6 +81,10 @@ def cadastrar():
 
         try:
             turma_service.cadastrar_turma(dados)
+        except RegraNegocioError as e:
+            db.session.rollback()
+            flash(str(e))
+            return render_template("secretaria/turmas/cadastrar.html", cursos=cursos)
         except SQLAlchemyError:
             db.session.rollback()
             current_app.logger.exception("Erro ao cadastrar turma")
@@ -114,6 +122,10 @@ def editar(id):
 
         try:
             turma_service.atualizar_turma(turma, dados)
+        except RegraNegocioError as e:
+            db.session.rollback()
+            flash(str(e))
+            return render_template("secretaria/turmas/editar.html", turma=turma, cursos=cursos)
         except SQLAlchemyError:
             db.session.rollback()
             current_app.logger.exception("Erro ao atualizar turma")

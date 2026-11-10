@@ -1,8 +1,9 @@
+from sqlalchemy import func
 from sqlalchemy.orm import joinedload
 
 from app import db
 from app.models.turma import Turma
-from app.services import RegraNegocioError
+from app.services import RegraNegocioError, obter_ou_404
 
 
 def listar_turmas():
@@ -35,10 +36,28 @@ def listar_turmas_ativas():
 
 
 def buscar_turma(turma_id):
-    return db.get_or_404(Turma, turma_id)
+    return obter_ou_404(Turma, turma_id)
+
+
+def _validar_duplicidade(dados, turma_id=None):
+    """Não permite duas turmas com o mesmo nome, ano e curso (ignora maiúsculas)."""
+    consulta = Turma.query.filter(
+        func.lower(Turma.nome) == dados["nome"].lower(),
+        Turma.ano == dados["ano"],
+        Turma.curso_id == dados["curso_id"],
+    )
+    if turma_id is not None:
+        consulta = consulta.filter(Turma.id != turma_id)
+
+    if consulta.first():
+        raise RegraNegocioError(
+            "Já existe a turma \"" + dados["nome"] + "\" neste curso e ano."
+        )
 
 
 def cadastrar_turma(dados):
+    _validar_duplicidade(dados)
+
     turma = Turma(
         nome=dados["nome"],
         ano=dados["ano"],
@@ -54,6 +73,8 @@ def cadastrar_turma(dados):
 
 
 def atualizar_turma(turma, dados):
+    _validar_duplicidade(dados, turma_id=turma.id)
+
     turma.nome = dados["nome"]
     turma.ano = dados["ano"]
     turma.turno = dados["turno"]

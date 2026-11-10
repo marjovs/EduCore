@@ -45,6 +45,10 @@ def registrar(turma_id):
             flash("Informe o nome da avaliação.")
             return tela()
 
+        if len(avaliacao) > 100:
+            flash("O nome da avaliação aceita no máximo 100 caracteres.")
+            return tela()
+
         try:
             data_avaliacao = date.fromisoformat(request.form.get("data", "").strip())
         except ValueError:

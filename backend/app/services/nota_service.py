@@ -1,5 +1,5 @@
 from sqlalchemy import func
-from sqlalchemy.orm import contains_eager, joinedload
+from sqlalchemy.orm import contains_eager
 
 from app import db
 from app.models.matricula import Matricula
@@ -7,20 +7,6 @@ from app.models.nota import Nota
 from app.models.turma import Turma
 from app.services import RegraNegocioError
 from app.services.busca import condicao_busca, paginar
-
-
-def listar_notas():
-    return (
-        Nota.query
-        .options(
-            joinedload(Nota.matricula).joinedload(Matricula.aluno),
-            joinedload(Nota.matricula)
-            .joinedload(Matricula.turma)
-            .joinedload(Turma.curso),
-        )
-        .order_by(Nota.data.desc())
-        .all()
-    )
 
 
 def _consulta_filtrada(consulta, busca=None, turma_id=None, ano=None):

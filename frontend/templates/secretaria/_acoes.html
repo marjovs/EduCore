@@ -1,8 +1,8 @@
 {#
     Botões da coluna "Ações" das listagens da secretaria.
     Uso: {% import "secretaria/_acoes.html" as acoes %}
-         {{ acoes.editar(url_for(...)) }}
-         {{ acoes.confirmar(url_for(...), "Excluir", "Excluir este aluno?") }}
+        {{ acoes.editar(url_for(...)) }}
+        {{ acoes.confirmar(url_for(...), "Excluir", "Excluir este aluno?") }}
 #}
 
 {% macro _icone(nome) -%}
@@ -19,11 +19,8 @@
 
 
 {% macro editar(url) -%}
-<a href="{{ url }}"
-   class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
-          text-blue-700 bg-blue-50 border border-blue-200
-          hover:bg-blue-100 hover:border-blue-300 transition-colors
-          focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400">
+<a href="{{ url }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-blue-700 bg-blue-50 border border-blue-200
+    hover:bg-blue-100 hover:border-blue-300 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400">
     {{ _icone("editar") }}
     Editar
 </a>
@@ -36,18 +33,14 @@
 #}
 {% macro confirmar(url, rotulo, pergunta, icone="excluir") -%}
 <details class="group">
-    <summary class="list-none [&::-webkit-details-marker]:hidden cursor-pointer select-none
-                    inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
-                    text-red-700 bg-red-50 border border-red-200
-                    hover:bg-red-100 hover:border-red-300 transition-colors
-                    group-open:bg-red-600 group-open:text-white group-open:border-red-600
-                    focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400">
+    <summary class="list-none [&::-webkit-details-marker]:hidden cursor-pointer select-none inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
+        text-red-700 bg-red-50 border border-red-200 hover:bg-red-100 hover:border-red-300 transition-colors
+        group-open:bg-red-600 group-open:text-white group-open:border-red-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400">
         {{ _icone(icone) }}
         {{ rotulo }}
     </summary>
 
-    <form method="POST" action="{{ url }}"
-          class="mt-2 p-3 w-60 bg-white border border-red-200 rounded-lg shadow-lg text-sm whitespace-normal">
+    <form method="POST" action="{{ url }}" class="mt-2 p-3 w-60 bg-white border border-red-200 rounded-lg shadow-lg text-sm whitespace-normal">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
         <p class="text-gray-700 mb-3">

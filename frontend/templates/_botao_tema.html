@@ -1,0 +1,21 @@
+{#
+    Ícones de lua (modo claro) e sol (modo escuro) do botão de tema.
+    Use dentro de um botão com o atributo data-alternar-tema.
+#}
+{% macro icones() -%}
+<svg class="icone-lua w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+</svg>
+<svg class="icone-sol w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+    <circle cx="12" cy="12" r="4" />
+    <path stroke-linecap="round" d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41" />
+</svg>
+{%- endmacro %}
+
+{# Botão redondo fixo no canto inferior direito, para páginas sem cabeçalho. #}
+{% macro flutuante() -%}
+<button type="button" data-alternar-tema title="Alternar modo claro/escuro" aria-label="Alternar modo claro/escuro"
+    class="botao-tema-flutuante p-3 rounded-full shadow-lg bg-blue-700 hover:bg-blue-800 text-white transition">
+    {{ icones() }}
+</button>
+{%- endmacro %}

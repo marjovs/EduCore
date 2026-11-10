@@ -39,10 +39,9 @@ def listar():
 @matriculas.route("/cadastrar", methods=["GET", "POST"])
 @perfil_required("secretaria")
 def cadastrar():
-    alunos = aluno_service.listar_alunos()
     turmas = turma_service.listar_turmas_ativas()
 
-    if not alunos:
+    if not aluno_service.existe_aluno():
         flash("Cadastre um aluno antes de realizar uma matrícula.")
         return redirect(url_for("alunos.listar"))
 
@@ -50,31 +49,33 @@ def cadastrar():
         flash("Cadastre uma turma ativa antes de realizar uma matrícula.")
         return redirect(url_for("turmas.listar"))
 
-    def tela():
+    def tela(aluno=None, turma_id=None):
+        # O aluno escolhido volta preenchido se o formulário tiver erro.
         return render_template(
             "secretaria/matriculas/cadastrar.html",
-            alunos=alunos,
-            turmas=turmas
+            turmas=turmas,
+            aluno_selecionado=aluno,
+            turma_selecionada=turma_id
         )
 
     if request.method == "POST":
-        try:
-            aluno_id = int(request.form.get("aluno_id", "").strip())
-            turma_id = int(request.form.get("turma_id", "").strip())
-        except ValueError:
-            flash("Selecione o aluno e a turma.")
-            return tela()
+        aluno_id = request.form.get("aluno_id", "").strip()
+        turma_id = request.form.get("turma_id", "").strip()
 
-        aluno = aluno_service.buscar_aluno(aluno_id)
-        turma = turma_service.buscar_turma(turma_id)
+        aluno = aluno_service.buscar_aluno(int(aluno_id)) if aluno_id.isdigit() else None
+        turma = turma_service.buscar_turma(int(turma_id)) if turma_id.isdigit() else None
+
+        if not aluno or not turma:
+            flash("Selecione o aluno e a turma.")
+            return tela(aluno, turma.id if turma else None)
 
         if turma.status != "Ativa":
             flash("Selecione uma turma ativa válida.")
-            return tela()
+            return tela(aluno)
 
         if matricula_service.existe_matricula_ativa(aluno.id, turma.id):
             flash("Este aluno já possui matrícula ativa nesta turma.")
-            return tela()
+            return tela(aluno, turma.id)
 
         try:
             matricula_service.cadastrar_matricula({
@@ -87,7 +88,7 @@ def cadastrar():
             db.session.rollback()
             current_app.logger.exception("Erro ao realizar matrícula")
             flash("Erro ao realizar matrícula.")
-            return tela()
+            return tela(aluno, turma.id)
 
         flash("Matrícula realizada com sucesso!")
         return redirect(url_for("matriculas.listar"))

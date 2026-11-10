@@ -8,6 +8,7 @@
         </title>
 
         <script src="https://cdn.tailwindcss.com"></script>
+        {% include "_tema.html" %}
     </head>
     <body class="bg-gray-100 min-h-screen p-6">
         <div class="max-w-7xl mx-auto">
@@ -44,7 +45,7 @@
             {% with endpoint = 'matriculas.listar',
                     campos_ocultos = {'canceladas': 1} if ver_canceladas else {},
                     placeholder = 'Aluno, CPF, turma ou curso' %}
-            {% include "secretaria/_filtros.html" %}
+            {% include "_filtros.html" %}
             {% endwith %}
 
             <div class="bg-white rounded-xl shadow overflow-x-auto">
@@ -122,11 +123,13 @@
                 </table>
             </div>
 
-            {% include "secretaria/_paginacao.html" %}
+            {% include "_paginacao.html" %}
 
             <a href="{{ url_for('secretaria.painel') }}" class="inline-block mt-6 text-blue-600 hover:underline">
                 Voltar ao painel
             </a>
         </div>
+        {% import "_botao_tema.html" as tema %}
+        {{ tema.flutuante() }}
     </body>
 </html>

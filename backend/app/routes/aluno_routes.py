@@ -1,10 +1,11 @@
 from datetime import datetime
 
-from flask import Blueprint, current_app, flash, redirect, render_template, request, url_for
+from flask import Blueprint, current_app, flash, jsonify, redirect, render_template, request, url_for
 from sqlalchemy.exc import SQLAlchemyError
 
 from app import db
 from app.acesso import perfil_required
+from app.routes.filtros import ler_filtros
 from app.services import RegraNegocioError, aluno_service
 
 alunos = Blueprint("alunos", __name__, url_prefix="/secretaria/alunos")
@@ -38,10 +39,30 @@ def _ler_formulario():
 @alunos.route("/")
 @perfil_required("secretaria")
 def listar():
+    filtros = ler_filtros()
+
     return render_template(
         "secretaria/alunos/listar.html",
-        alunos=aluno_service.listar_alunos()
+        pagina=aluno_service.buscar_alunos_com_matriculas_ativas(
+            busca=filtros["busca"], pagina=filtros["pagina"]
+        ),
+        filtros=filtros
     )
+
+
+@alunos.route("/buscar")
+@perfil_required("secretaria")
+def buscar():
+    """Sugestões para o campo de aluno (ex.: cadastro de matrícula). ?q= nome ou CPF."""
+    texto = request.args.get("q", "").strip()[:100]
+
+    if len(texto) < 2:
+        return jsonify([])
+
+    return jsonify([
+        {"id": aluno.id, "nome": aluno.nome, "cpf": aluno.cpf}
+        for aluno in aluno_service.sugerir_alunos(texto)
+    ])
 
 
 @alunos.route("/cadastrar", methods=["GET", "POST"])

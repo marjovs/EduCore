@@ -1,0 +1,38 @@
+{#
+    Modo claro/escuro. Incluir no <head> de toda página, logo depois do
+    script do Tailwind:  {% include "_tema.html" %}
+#}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/tema-escuro.css') }}">
+<script>
+    // Permite usar classes dark: do Tailwind (ex.: no cabeçalho do base.html).
+    if (window.tailwind) {
+        tailwind.config = { darkMode: 'class' };
+    }
+
+    (function () {
+        var raiz = document.documentElement;
+
+        // Aplica o tema salvo antes de desenhar a página (evita "piscar" claro).
+        var tema = null;
+        try { tema = localStorage.getItem('tema'); } catch (e) {}
+        var sistemaEscuro = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+        if (tema === 'dark' || (!tema && sistemaEscuro)) {
+            raiz.classList.add('dark');
+        }
+
+        // Qualquer botão com data-alternar-tema troca o tema.
+        document.addEventListener('click', function (evento) {
+            var botao = evento.target.closest('[data-alternar-tema]');
+            if (!botao) return;
+
+            var escuro = raiz.classList.toggle('dark');
+            try { localStorage.setItem('tema', escuro ? 'dark' : 'light'); } catch (e) {}
+
+            document.querySelectorAll('[data-alternar-tema]').forEach(function (b) {
+                b.setAttribute('aria-pressed', escuro ? 'true' : 'false');
+                b.title = escuro ? 'Mudar para o modo claro' : 'Mudar para o modo escuro';
+            });
+        });
+    })();
+</script>

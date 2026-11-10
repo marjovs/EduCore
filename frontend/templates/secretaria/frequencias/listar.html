@@ -8,6 +8,7 @@
         </title>
 
         <script src="https://cdn.tailwindcss.com"></script>
+        {% include "_tema.html" %}
     </head>
     <body class="bg-gray-100 min-h-screen p-6">
         <div class="max-w-7xl mx-auto">
@@ -22,7 +23,7 @@
             </div>
 
             {% with endpoint = 'secretaria.frequencia' %}
-            {% include "secretaria/_filtros.html" %}
+            {% include "_filtros.html" %}
             {% endwith %}
 
             <section class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
@@ -125,11 +126,13 @@
                 </table>
             </div>
 
-            {% include "secretaria/_paginacao.html" %}
+            {% include "_paginacao.html" %}
 
             <a href="{{ url_for('secretaria.painel') }}" class="inline-block mt-6 text-blue-600 hover:underline">
                 Voltar ao painel
             </a>
         </div>
+        {% import "_botao_tema.html" as tema %}
+        {{ tema.flutuante() }}
     </body>
 </html>

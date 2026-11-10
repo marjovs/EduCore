@@ -1,84 +1,265 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EduCore | Matricular Aluno</title>
-<script src="https://cdn.tailwindcss.com"></script>
-</head>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>
+            EduCore | Matricular Aluno
+        </title>
 
-<body class="bg-gray-100 min-h-screen p-6">
+        <script src="https://cdn.tailwindcss.com"></script>
+        {% include "_tema.html" %}
+    </head>
+    <body class="bg-gray-100 min-h-screen p-6">
+        <div class="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow">
+            <h1 class="text-2xl font-bold text-blue-700 mb-6">
+                Realizar Matrícula
+            </h1>
 
-<div class="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow">
+            {% with mensagens = get_flashed_messages() %}
+            {% if mensagens %}
+            {% for mensagem in mensagens %}
+            <p class="bg-blue-100 text-blue-700 p-3 rounded mb-4">
+                {{ mensagem }}
+            </p>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
 
-<h1 class="text-2xl font-bold text-blue-700 mb-6">
-Realizar Matrícula
-</h1>
+            <form method="POST" class="space-y-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-{% with mensagens = get_flashed_messages() %}
-{% if mensagens %}
-{% for mensagem in mensagens %}
-<p class="bg-blue-100 text-blue-700 p-3 rounded mb-4">
-{{ mensagem }}
-</p>
-{% endfor %}
-{% endif %}
-{% endwith %}
+                <div id="campo-aluno" class="relative" data-url="{{ url_for('alunos.buscar') }}">
+                    <label for="busca-aluno" class="block font-medium mb-1">
+                        Aluno
+                    </label>
 
-<form method="POST" class="space-y-4">
-<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="aluno_id" id="aluno-id" value="{{ aluno_selecionado.id if aluno_selecionado else '' }}">
 
-<div>
-<label class="block font-medium mb-1">Aluno</label>
+                    <!-- Aluno escolhido -->
+                    <div id="aluno-escolhido" class="{{ '' if aluno_selecionado else 'hidden' }} flex items-center justify-between gap-3 border border-blue-200 bg-blue-50 rounded-lg p-3">
+                        <div>
+                            <p id="aluno-escolhido-nome" class="font-medium text-gray-800">{{ aluno_selecionado.nome if aluno_selecionado }}</p>
+                            <p id="aluno-escolhido-cpf" class="text-sm text-gray-500">{{ ('CPF ' ~ aluno_selecionado.cpf) if aluno_selecionado }}</p>
+                        </div>
 
-<select name="aluno_id" required
-class="w-full border rounded-lg p-3">
+                        <button type="button" id="trocar-aluno" class="text-sm font-medium text-blue-700 hover:underline">
+                            Trocar
+                        </button>
+                    </div>
 
-<option value="">Selecione um aluno</option>
+                    <!-- Busca -->
+                    <div id="aluno-busca" class="{{ 'hidden' if aluno_selecionado }}">
+                        <input type="search" id="busca-aluno" autocomplete="off" maxlength="100"
+                            placeholder="Digite o nome ou o CPF do aluno"
+                            role="combobox" aria-expanded="false" aria-controls="sugestoes-aluno" aria-autocomplete="list"
+                            class="w-full border border-gray-300 rounded-lg p-3">
 
-{% for aluno in alunos %}
-<option value="{{ aluno.id }}">
-{{ aluno.nome }} - {{ aluno.cpf }}
-</option>
-{% endfor %}
+                        <p id="aluno-ajuda" class="text-sm text-gray-500 mt-1">
+                            Digite pelo menos 2 letras ou números.
+                        </p>
 
-</select>
-</div>
+                        <ul id="sugestoes-aluno" role="listbox"
+                            class="hidden absolute left-0 right-0 z-10 mt-1 max-h-72 overflow-auto bg-white border border-gray-300 rounded-lg shadow-lg">
+                        </ul>
+                    </div>
+                </div>
 
-<div>
-<label class="block font-medium mb-1">Turma</label>
+                <div>
+                    <label class="block font-medium mb-1">
+                        Turma
+                    </label>
 
-<select name="turma_id" required
-class="w-full border rounded-lg p-3">
+                    <select name="turma_id" required class="w-full border rounded-lg p-3">
+                        <option value="">
+                            Selecione uma turma
+                        </option>
+                        {% for turma in turmas %}
+                        <option value="{{ turma.id }}" {{ 'selected' if turma_selecionada == turma.id }}>
+                            {{ turma.nome }} - {{ turma.curso.nome }} ({{ turma.ano }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
 
-<option value="">Selecione uma turma</option>
+                <div class="flex gap-3 pt-4">
+                    <button type="submit" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700">
+                        Matricular
+                    </button>
 
-{% for turma in turmas %}
-<option value="{{ turma.id }}">
-{{ turma.nome }} - {{ turma.curso.nome }} ({{ turma.ano }})
-</option>
-{% endfor %}
+                    <a href="{{ url_for('matriculas.listar') }}" class="bg-gray-200 px-6 py-3 rounded-lg hover:bg-gray-300">
+                        Voltar
+                    </a>
+                </div>
+            </form>
+        </div>
+        <script>
+            // Campo de aluno com busca: sugere até 10 alunos enquanto se digita.
+            (function () {
+                var campo = document.getElementById('campo-aluno');
+                var busca = document.getElementById('busca-aluno');
+                var lista = document.getElementById('sugestoes-aluno');
+                var ajuda = document.getElementById('aluno-ajuda');
+                var alunoId = document.getElementById('aluno-id');
+                var blocoBusca = document.getElementById('aluno-busca');
+                var escolhido = document.getElementById('aluno-escolhido');
+                var formulario = campo.closest('form');
 
-</select>
-</div>
+                var resultados = [];
+                var ativo = -1;
+                var espera = null;
+                var ultimaConsulta = 0;
 
-<div class="flex gap-3 pt-4">
+                function fecharLista() {
+                    lista.classList.add('hidden');
+                    busca.setAttribute('aria-expanded', 'false');
+                    ativo = -1;
+                }
 
-<button type="submit"
-class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700">
-Matricular
-</button>
+                function destacar(indice) {
+                    ativo = indice;
+                    Array.prototype.forEach.call(lista.children, function (item, i) {
+                        var marcado = i === indice;
+                        item.classList.toggle('bg-blue-50', marcado);
+                        item.setAttribute('aria-selected', marcado ? 'true' : 'false');
+                        if (marcado) item.scrollIntoView({ block: 'nearest' });
+                    });
+                }
 
-<a href="{{ url_for('matriculas.listar') }}"
-class="bg-gray-200 px-6 py-3 rounded-lg hover:bg-gray-300">
-Voltar
-</a>
+                function escolher(aluno) {
+                    alunoId.value = aluno.id;
+                    document.getElementById('aluno-escolhido-nome').textContent = aluno.nome;
+                    document.getElementById('aluno-escolhido-cpf').textContent = 'CPF ' + aluno.cpf;
+                    escolhido.classList.remove('hidden');
+                    blocoBusca.classList.add('hidden');
+                    fecharLista();
+                }
 
-</div>
+                function mostrar(alunos) {
+                    resultados = alunos;
+                    lista.innerHTML = '';
 
-</form>
+                    if (!alunos.length) {
+                        ajuda.textContent = 'Nenhum aluno encontrado.';
+                        fecharLista();
+                        return;
+                    }
 
-</div>
+                    ajuda.textContent = alunos.length === 10
+                        ? 'Mostrando os 10 primeiros. Digite mais para refinar.'
+                        : alunos.length + ' aluno(s) encontrado(s).';
 
-</body>
+                    alunos.forEach(function (aluno, i) {
+                        var item = document.createElement('li');
+                        item.setAttribute('role', 'option');
+                        item.className = 'px-4 py-2 cursor-pointer hover:bg-blue-50 border-b last:border-b-0';
+
+                        var nome = document.createElement('p');
+                        nome.className = 'font-medium text-gray-800';
+                        nome.textContent = aluno.nome;
+
+                        var cpf = document.createElement('p');
+                        cpf.className = 'text-sm text-gray-500';
+                        cpf.textContent = 'CPF ' + aluno.cpf;
+
+                        item.appendChild(nome);
+                        item.appendChild(cpf);
+                        // mousedown para escolher antes de o campo perder o foco
+                        item.addEventListener('mousedown', function (e) {
+                            e.preventDefault();
+                            escolher(aluno);
+                        });
+                        lista.appendChild(item);
+                    });
+
+                    lista.classList.remove('hidden');
+                    busca.setAttribute('aria-expanded', 'true');
+                    destacar(0);
+                }
+
+                function pesquisar() {
+                    var texto = busca.value.trim();
+
+                    if (texto.length < 2) {
+                        ajuda.textContent = 'Digite pelo menos 2 letras ou números.';
+                        lista.innerHTML = '';
+                        fecharLista();
+                        return;
+                    }
+
+                    var consulta = ++ultimaConsulta;
+                    ajuda.textContent = 'Buscando...';
+
+                    fetch(campo.dataset.url + '?q=' + encodeURIComponent(texto), {
+                        headers: { 'Accept': 'application/json' },
+                        credentials: 'same-origin'
+                    })
+                        .then(function (resposta) {
+                            if (!resposta.ok || resposta.headers.get('Content-Type').indexOf('json') === -1) {
+                                throw new Error('resposta inválida');
+                            }
+                            return resposta.json();
+                        })
+                        .then(function (alunos) {
+                            if (consulta === ultimaConsulta) mostrar(alunos);
+                        })
+                        .catch(function () {
+                            if (consulta === ultimaConsulta) {
+                                ajuda.textContent = 'Não foi possível buscar. Recarregue a página e tente de novo.';
+                                fecharLista();
+                            }
+                        });
+                }
+
+                busca.addEventListener('input', function () {
+                    alunoId.value = '';
+                    clearTimeout(espera);
+                    espera = setTimeout(pesquisar, 250);
+                });
+
+                busca.addEventListener('keydown', function (e) {
+                    var aberta = !lista.classList.contains('hidden');
+
+                    if (e.key === 'ArrowDown' && aberta) {
+                        e.preventDefault();
+                        destacar(Math.min(ativo + 1, resultados.length - 1));
+                    } else if (e.key === 'ArrowUp' && aberta) {
+                        e.preventDefault();
+                        destacar(Math.max(ativo - 1, 0));
+                    } else if (e.key === 'Enter') {
+                        // Enter escolhe o aluno destacado em vez de enviar o formulário
+                        e.preventDefault();
+                        if (aberta && ativo >= 0) escolher(resultados[ativo]);
+                    } else if (e.key === 'Escape') {
+                        fecharLista();
+                    }
+                });
+
+                busca.addEventListener('blur', function () {
+                    setTimeout(fecharLista, 100);
+                });
+
+                document.getElementById('trocar-aluno').addEventListener('click', function () {
+                    alunoId.value = '';
+                    escolhido.classList.add('hidden');
+                    blocoBusca.classList.remove('hidden');
+                    busca.value = '';
+                    ajuda.textContent = 'Digite pelo menos 2 letras ou números.';
+                    busca.focus();
+                });
+
+                formulario.addEventListener('submit', function (e) {
+                    if (!alunoId.value) {
+                        e.preventDefault();
+                        blocoBusca.classList.remove('hidden');
+                        ajuda.textContent = 'Escolha um aluno da lista antes de matricular.';
+                        busca.focus();
+                    }
+                });
+            })();
+        </script>
+
+        {% import "_botao_tema.html" as tema %}
+        {{ tema.flutuante() }}
+    </body>
 </html>

@@ -8,6 +8,7 @@
         </title>
 
         <script src="https://cdn.tailwindcss.com"></script>
+        {% include "_tema.html" %}
     </head>
     <body class="bg-slate-100 min-h-screen">
         <header class="bg-blue-800 text-white px-8 py-5 flex justify-between items-center">
@@ -99,5 +100,7 @@
                 </a>
             </section>
         </main>
+        {% import "_botao_tema.html" as tema %}
+        {{ tema.flutuante() }}
     </body>
 </html>

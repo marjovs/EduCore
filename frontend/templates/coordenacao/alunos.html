@@ -9,7 +9,7 @@
                 <h1 class="text-3xl font-bold text-gray-800">
                     Alunos
                 </h1>
-                
+
                 <p class="text-gray-500 mt-2">
                     Consulta dos alunos cadastrados no EduCore.
                 </p>
@@ -19,6 +19,10 @@
                 Voltar ao Painel
             </a>
         </div>
+
+        {% with endpoint = 'coordenacao.alunos', cor = 'purple', placeholder = 'Nome, CPF ou e-mail' %}
+        {% include "_filtros.html" %}
+        {% endwith %}
 
         <!-- Lista de alunos -->
         <div class="bg-white rounded-xl shadow overflow-x-auto">
@@ -50,7 +54,7 @@
                 </thead>
 
                 <tbody>
-                    {% for aluno in alunos %}
+                    {% for aluno, ativas in pagina.items %}
                     <tr class="border-b hover:bg-gray-50">
                         <td class="p-4">
                             {{ aluno.id }}
@@ -71,19 +75,23 @@
                             {{ aluno.data_nascimento.strftime('%d/%m/%Y') }}
                         </td>
                         <td class="p-4">
-                            {{ aluno.matriculas | selectattr('status', 'equalto', 'Ativa') | list | length }}
+                            {{ ativas }}
                         </td>
                     </tr>
                     {% else %}
                     <tr>
                         <td colspan="7" class="p-6 text-center text-gray-500">
-                            Nenhum aluno cadastrado.
+                            {{ 'Nenhum aluno encontrado para esta busca.' if filtros.busca else 'Nenhum aluno cadastrado.' }}
                         </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
+
+        {% with cor = 'purple' %}
+        {% include "_paginacao.html" %}
+        {% endwith %}
     </div>
 </div>
 {% endblock %}

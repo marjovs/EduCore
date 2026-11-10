@@ -1,71 +1,102 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EduCore | Cadastrar Curso</title>
-<script src="https://cdn.tailwindcss.com"></script>
-</head>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>
+            EduCore | Cadastrar Curso
+        </title>
 
-<body class="bg-slate-100 min-h-screen p-6">
-<main class="max-w-2xl mx-auto bg-white p-8 rounded-2xl shadow">
+        <script src="https://cdn.tailwindcss.com"></script>
+        {% include "_tema.html" %}
+    </head>
+    <body class="bg-slate-100 min-h-screen p-6">
+        <main class="max-w-2xl mx-auto bg-white p-8 rounded-2xl shadow">
+            <a href="{{ url_for('cursos.listar') }}" class="text-blue-700 hover:underlinebg-purple-600 hover:bg-purple-700 text-white px-5 py-2 rounded-lg">
+                Voltar para cursos
+            </a>
 
-<a href="{{ url_for('cursos.listar') }}"
-class="text-blue-700 hover:underlinebg-purple-600 hover:bg-purple-700 text-white px-5 py-2 rounded-lg">Voltar para cursos</a>
+            <h1 class="text-2xl font-bold mt-5 mb-6">
+                Cadastrar curso
+            </h1>
 
-<h1 class="text-2xl font-bold mt-5 mb-6">Cadastrar curso</h1>
+            {% with mensagens = get_flashed_messages() %}
+            {% for mensagem in mensagens %}
+            <p class="text-red-600 mb-4">
+                {{ mensagem }}
+            </p>
+            {% endfor %}
+            {% endwith %}
 
-{% with mensagens = get_flashed_messages() %}
-{% for mensagem in mensagens %}
-<p class="text-red-600 mb-4">{{ mensagem }}</p>
-{% endfor %}
-{% endwith %}
+            <form method="POST" class="space-y-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-<form method="POST" class="space-y-4">
-<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div>
+                    <label class="block mb-1 font-medium">
+                        Nome do curso *
+                    </label>
 
-<div>
-<label class="block mb-1 font-medium">Nome do curso *</label>
-<input type="text" name="nome" required
-class="w-full border rounded-lg p-3">
-</div>
+                    <input type="text" name="nome" required class="w-full border rounded-lg p-3">
+                </div>
 
-<div>
-<label class="block mb-1 font-medium">Descrição</label>
-<textarea name="descricao" rows="3"
-class="w-full border rounded-lg p-3"></textarea>
-</div>
+                <div>
+                    <label class="block mb-1 font-medium">
+                        Descrição
+                    </label>
 
-<div>
-<label class="block mb-1 font-medium">Carga horária (horas) *</label>
-<input type="number" name="carga_horaria" min="1" required
-class="w-full border rounded-lg p-3">
-</div>
+                    <textarea name="descricao" rows="3" class="w-full border rounded-lg p-3"></textarea>
+                </div>
 
-<div>
-<label class="block mb-1 font-medium">Modalidade *</label>
-<select name="modalidade" required
-class="w-full border rounded-lg p-3">
-<option value="">Selecione</option>
-<option value="Presencial">Presencial</option>
-<option value="EAD">EAD</option>
-<option value="Híbrido">Híbrido</option>
-</select>
-</div>
+                <div>
+                    <label class="block mb-1 font-medium">
+                        Carga horária (horas) *
+                    </label>
 
-<div>
-<label class="block mb-1 font-medium">Status</label>
-<select name="status" class="w-full border rounded-lg p-3">
-<option value="Ativo">Ativo</option>
-<option value="Inativo">Inativo</option>
-</select>
-</div>
+                    <input type="number" name="carga_horaria" min="1" required class="w-full border rounded-lg p-3">
+                </div>
 
-<button type="submit"
-class="w-full bg-blue-700 text-white py-3 rounded-lg hover:bg-blue-800">
-Salvar curso
-</button>
-</form>
-</main>
-</body>
+                <div>
+                    <label class="block mb-1 font-medium">
+                        Modalidade *
+                    </label>
+
+                    <select name="modalidade" required class="w-full border rounded-lg p-3">
+                        <option value="">
+                            Selecione
+                        </option>
+                        <option value="Presencial">
+                            Presencial
+                        </option>
+                        <option value="EAD">
+                            EAD
+                        </option>
+                        <option value="Híbrido">
+                            Híbrido
+                        </option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block mb-1 font-medium">
+                        Status
+                    </label>
+                    
+                    <select name="status" class="w-full border rounded-lg p-3">
+                        <option value="Ativo">
+                            Ativo
+                        </option>
+                        <option value="Inativo">
+                            Inativo
+                        </option>
+                    </select>
+                </div>
+
+                <button type="submit" class="w-full bg-blue-700 text-white py-3 rounded-lg hover:bg-blue-800">
+                    Salvar curso
+                </button>
+            </form>
+        </main>
+        {% import "_botao_tema.html" as tema %}
+        {{ tema.flutuante() }}
+    </body>
 </html>

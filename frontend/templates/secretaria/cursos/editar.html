@@ -4,7 +4,7 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>
-            EduCore | Editar Curso
+            EduCore | Editar curso
         </title>
 
         <script src="https://cdn.tailwindcss.com"></script>
@@ -33,10 +33,10 @@
 
                 <div>
                     <label class="block mb-1 font-medium">
-                        Nome *
+                        Nome do curso *
                     </label>
 
-                    <input type="text" name="nome" required value="{{ curso.nome }}" class="w-full border rounded-lg p-3">
+                    <input type="text" name="nome" required maxlength="120" value="{{ curso.nome }}" class="w-full border rounded-lg p-3">
                 </div>
 
                 <div>
@@ -51,10 +51,10 @@
 
                 <div>
                     <label class="block mb-1 font-medium">
-                        Carga horária *
+                        Carga horária (horas) *
                     </label>
 
-                    <input type="number" name="carga_horaria" min="1" required value="{{ curso.carga_horaria }}" class="w-full border rounded-lg p-3">
+                    <input type="number" name="carga_horaria" min="1" max="20000" required value="{{ curso.carga_horaria }}" class="w-full border rounded-lg p-3">
                 </div>
 
                 <div>

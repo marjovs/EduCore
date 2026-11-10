@@ -2,9 +2,12 @@ from sqlalchemy import func, or_, select
 
 from app import db
 from app.models.aluno import Aluno
+from app.models.frequencia import Frequencia
 from app.models.matricula import Matricula
-from app.services import RegraNegocioError
-from app.services.busca import condicao_busca, paginar
+from app.models.nota import Nota
+from app.services import RegraNegocioError, obter_ou_404
+from app.services.busca import condicao_busca, cpf_sem_pontuacao, paginar
+from app.validacao import somente_digitos
 
 
 def existe_aluno():
@@ -47,7 +50,7 @@ def buscar_alunos_com_matriculas_ativas(busca=None, pagina=1):
 
 
 def buscar_aluno(aluno_id):
-    return db.get_or_404(Aluno, aluno_id)
+    return obter_ou_404(Aluno, aluno_id)
 
 
 def _validar_unicidade(email, cpf, aluno_id=None):
@@ -55,21 +58,24 @@ def _validar_unicidade(email, cpf, aluno_id=None):
     if aluno_id is not None:
         consulta = consulta.filter(Aluno.id != aluno_id)
 
-    if consulta.filter(Aluno.email == email).first():
+    if consulta.filter(func.lower(Aluno.email) == email).first():
         raise RegraNegocioError("Já existe um aluno com este e-mail.")
 
-    if consulta.filter(Aluno.cpf == cpf).first():
+    # Compara só os dígitos, para que 111.222.333-44 e 11122233344 sejam o
+    # mesmo CPF (inclusive em registros antigos salvos com pontuação).
+    if consulta.filter(cpf_sem_pontuacao() == somente_digitos(cpf)).first():
         raise RegraNegocioError("Já existe um aluno com este CPF.")
 
 
 def cadastrar_aluno(dados):
     email = dados["email"].strip().lower()
-    _validar_unicidade(email, dados["cpf"])
+    cpf = somente_digitos(dados["cpf"])
+    _validar_unicidade(email, cpf)
 
     aluno = Aluno(
         nome=dados["nome"],
         email=email,
-        cpf=dados["cpf"],
+        cpf=cpf,
         telefone=dados.get("telefone"),
         data_nascimento=dados["data_nascimento"]
     )
@@ -82,11 +88,12 @@ def cadastrar_aluno(dados):
 
 def atualizar_aluno(aluno, dados):
     email = dados["email"].strip().lower()
-    _validar_unicidade(email, dados["cpf"], aluno_id=aluno.id)
+    cpf = somente_digitos(dados["cpf"])
+    _validar_unicidade(email, cpf, aluno_id=aluno.id)
 
     aluno.nome = dados["nome"]
     aluno.email = email
-    aluno.cpf = dados["cpf"]
+    aluno.cpf = cpf
     aluno.telefone = dados.get("telefone")
     aluno.data_nascimento = dados["data_nascimento"]
 
@@ -96,11 +103,23 @@ def atualizar_aluno(aluno, dados):
 
 
 def excluir_aluno(aluno):
-    if aluno.matriculas:
+    """Exclui o aluno se ele não tiver matrícula ativa.
+
+    As matrículas canceladas do aluno (com as notas e frequências delas) são
+    apagadas junto, numa única transação.
+    """
+    if any(matricula.status == "Ativa" for matricula in aluno.matriculas):
         raise RegraNegocioError(
-            "Não é possível excluir: o aluno possui matrículas. "
-            "Cancele as matrículas em vez de excluir o aluno."
+            "Não é possível excluir: o aluno possui matrícula ativa. "
+            "Cancele a matrícula antes de excluir o aluno."
         )
+
+    ids = [matricula.id for matricula in aluno.matriculas]
+    if ids:
+        Nota.query.filter(Nota.matricula_id.in_(ids)).delete(synchronize_session=False)
+        Frequencia.query.filter(Frequencia.matricula_id.in_(ids)).delete(synchronize_session=False)
+        Matricula.query.filter(Matricula.id.in_(ids)).delete(synchronize_session=False)
+        db.session.expire(aluno, ["matriculas"])
 
     db.session.delete(aluno)
     db.session.commit()

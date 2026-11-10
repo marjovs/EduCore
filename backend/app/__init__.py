@@ -18,6 +18,10 @@ def create_app():
     db.init_app(app)
     csrf.init_app(app)
 
+    # {{ aluno.cpf|cpf }} -> 111.222.333-44 (o banco guarda só os dígitos)
+    from app.validacao import formatar_cpf
+    app.add_template_filter(formatar_cpf, "cpf")
+
     @app.errorhandler(CSRFError)
     def csrf_invalido(erro):
         flash("Sua sessão expirou ou o formulário é inválido. Tente novamente.")

@@ -24,7 +24,7 @@
                 </div>
 
                 <a href="{{ url_for('alunos.cadastrar') }}" class="bg-blue-700 text-white px-5 py-3 rounded-lg hover:bg-blue-800">
-                    + Cadastrar aluno
+                    + Novo aluno
                 </a>
             </header>
 
@@ -80,7 +80,7 @@
                                 {{ aluno.email }}
                             </td>
                             <td class="p-4">
-                                {{ aluno.cpf }}
+                                {{ aluno.cpf|cpf }}
                             </td>
                             <td class="p-4">
                                 {{ aluno.telefone or '-' }}
@@ -89,7 +89,7 @@
                                 {% import "secretaria/_acoes.html" as acoes with context %}
                                 <div class="flex gap-2 items-start">
                                     {{ acoes.editar(url_for('alunos.editar', id=aluno.id)) }}
-                                    {{ acoes.confirmar(url_for('alunos.excluir', id=aluno.id), "Excluir", "Tem certeza que deseja excluir este aluno?") }}
+                                    {{ acoes.confirmar(url_for('alunos.excluir', id=aluno.id), "Excluir", "Excluir este aluno? As matrículas canceladas dele, com notas e frequências, também serão apagadas.") }}
                                 </div>
                             </td>
                         </tr>

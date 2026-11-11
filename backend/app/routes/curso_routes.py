@@ -1,9 +1,8 @@
-from flask import Blueprint, current_app, flash, redirect, render_template, request, url_for
-from sqlalchemy.exc import SQLAlchemyError
+from flask import Blueprint, flash, redirect, render_template, request, url_for
 
-from app import db
 from app.acesso import perfil_required
-from app.services import RegraNegocioError, curso_service
+from app.routes.acoes import executar
+from app.services import curso_service
 from app.validacao import inteiro_seguro, texto_grande_demais
 
 cursos = Blueprint("cursos", __name__, url_prefix="/secretaria/cursos")
@@ -58,29 +57,25 @@ def listar():
 @cursos.route("/cadastrar", methods=["GET", "POST"])
 @perfil_required("secretaria")
 def cadastrar():
+    def tela():
+        return render_template("secretaria/cursos/cadastrar.html")
+
     if request.method == "POST":
         dados, erro = _ler_formulario()
 
         if erro:
             flash(erro)
-            return render_template("secretaria/cursos/cadastrar.html")
+            return tela()
 
-        try:
-            curso_service.cadastrar_curso(dados)
-        except RegraNegocioError as e:
-            db.session.rollback()
-            flash(str(e))
-            return render_template("secretaria/cursos/cadastrar.html")
-        except SQLAlchemyError:
-            db.session.rollback()
-            current_app.logger.exception("Erro ao cadastrar curso")
-            flash("Erro ao cadastrar curso. Verifique os dados.")
-            return render_template("secretaria/cursos/cadastrar.html")
+        falha = executar(lambda: curso_service.cadastrar_curso(dados),
+                         "Erro ao cadastrar curso. Verifique os dados.", tela)
+        if falha:
+            return falha
 
         flash("Curso cadastrado com sucesso!")
         return redirect(url_for("cursos.listar"))
 
-    return render_template("secretaria/cursos/cadastrar.html")
+    return tela()
 
 
 @cursos.route("/editar/<int:id>", methods=["GET", "POST"])
@@ -88,29 +83,25 @@ def cadastrar():
 def editar(id):
     curso = curso_service.buscar_curso(id)
 
+    def tela():
+        return render_template("secretaria/cursos/editar.html", curso=curso)
+
     if request.method == "POST":
         dados, erro = _ler_formulario()
 
         if erro:
             flash(erro)
-            return render_template("secretaria/cursos/editar.html", curso=curso)
+            return tela()
 
-        try:
-            curso_service.atualizar_curso(curso, dados)
-        except RegraNegocioError as e:
-            db.session.rollback()
-            flash(str(e))
-            return render_template("secretaria/cursos/editar.html", curso=curso)
-        except SQLAlchemyError:
-            db.session.rollback()
-            current_app.logger.exception("Erro ao atualizar curso")
-            flash("Erro ao atualizar curso. Verifique os dados.")
-            return render_template("secretaria/cursos/editar.html", curso=curso)
+        falha = executar(lambda: curso_service.atualizar_curso(curso, dados),
+                         "Erro ao atualizar curso. Verifique os dados.", tela)
+        if falha:
+            return falha
 
         flash("Curso atualizado com sucesso!")
         return redirect(url_for("cursos.listar"))
 
-    return render_template("secretaria/cursos/editar.html", curso=curso)
+    return tela()
 
 
 @cursos.route("/excluir/<int:id>", methods=["POST"])
@@ -118,16 +109,12 @@ def editar(id):
 def excluir(id):
     curso = curso_service.buscar_curso(id)
 
-    try:
-        curso_service.excluir_curso(curso)
-    except RegraNegocioError as e:
-        flash(str(e))
-        return redirect(url_for("cursos.listar"))
-    except SQLAlchemyError:
-        db.session.rollback()
-        current_app.logger.exception("Erro ao excluir curso")
-        flash("Não foi possível excluir o curso.")
+    def voltar():
         return redirect(url_for("cursos.listar"))
 
+    falha = executar(lambda: curso_service.excluir_curso(curso), "Não foi possível excluir o curso.", voltar)
+    if falha:
+        return falha
+
     flash("Curso excluído com sucesso!")
-    return redirect(url_for("cursos.listar"))
+    return voltar()

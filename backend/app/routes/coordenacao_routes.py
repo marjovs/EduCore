@@ -7,14 +7,9 @@ from app.models.aluno import Aluno
 from app.models.frequencia import Frequencia
 from app.models.matricula import Matricula
 from app.models.nota import Nota
+from app.routes.consultas import tela_de_frequencia, tela_de_notas
 from app.routes.filtros import ler_filtros
-from app.services import (
-    aluno_service,
-    frequencia_service,
-    matricula_service,
-    nota_service,
-    turma_service,
-)
+from app.services import aluno_service, matricula_service
 
 coordenacao = Blueprint("coordenacao", __name__, url_prefix="/coordenacao")
 
@@ -44,13 +39,6 @@ def painel():
 
 
 STATUS_MATRICULA = ("Ativa", "Cancelada")
-
-
-def _opcoes_de_filtro():
-    return {
-        "turmas": turma_service.listar_turmas_para_filtro(),
-        "anos": matricula_service.listar_anos_das_turmas(),
-    }
 
 
 @coordenacao.route("/alunos")
@@ -91,28 +79,10 @@ def matriculas():
 @coordenacao.route("/desempenho")
 @perfil_required("coordenacao")
 def desempenho():
-    filtros = ler_filtros()
-    pagina, resumo = nota_service.buscar_notas(**filtros)
-
-    return render_template(
-        "coordenacao/desempenho.html",
-        pagina=pagina,
-        resumo=resumo,
-        filtros=filtros,
-        **_opcoes_de_filtro(),
-    )
+    return tela_de_notas("coordenacao")
 
 
 @coordenacao.route("/frequencia")
 @perfil_required("coordenacao")
 def frequencia():
-    filtros = ler_filtros()
-    pagina, resumo = frequencia_service.buscar_frequencias(**filtros)
-
-    return render_template(
-        "coordenacao/frequencia.html",
-        pagina=pagina,
-        resumo=resumo,
-        filtros=filtros,
-        **_opcoes_de_filtro(),
-    )
+    return tela_de_frequencia("coordenacao")

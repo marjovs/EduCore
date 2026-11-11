@@ -1,10 +1,9 @@
 from datetime import date
 
-from flask import Blueprint, current_app, flash, redirect, render_template, request, url_for
-from sqlalchemy.exc import SQLAlchemyError
+from flask import Blueprint, flash, redirect, render_template, request, url_for
 
-from app import db
 from app.acesso import perfil_required
+from app.routes.acoes import executar
 from app.services import frequencia_service, matricula_service, turma_service
 
 frequencias = Blueprint("frequencias", __name__, url_prefix="/instrutor/frequencia")
@@ -65,13 +64,10 @@ def registrar(turma_id):
             flash("Esta turma não possui alunos com matrícula ativa.")
             return tela()
 
-        try:
-            frequencia_service.registrar_frequencias(dados_frequencias, data_registro)
-        except SQLAlchemyError:
-            db.session.rollback()
-            current_app.logger.exception("Erro ao registrar frequências")
-            flash("Erro ao registrar frequências.")
-            return tela()
+        falha = executar(lambda: frequencia_service.registrar_frequencias(dados_frequencias, data_registro),
+                         "Erro ao registrar frequências.", tela)
+        if falha:
+            return falha
 
         flash("Frequências registradas com sucesso!")
         return redirect(url_for("frequencias.listar"))

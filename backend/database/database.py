@@ -1,4 +1,7 @@
 import os
+import sys
+
+from sqlalchemy import inspect
 
 from app import db
 from app.models.usuario import Usuario
@@ -26,7 +29,21 @@ def criar_usuarios_iniciais():
 
 
 def inicializar_banco(app):
+    """Confere se o banco já tem as tabelas e cria os usuários iniciais.
+
+    As tabelas são criadas e alteradas pelas migrações (Flask-Migrate), não
+    mais pelo create_all(). Num banco novo, rode antes, na pasta backend:
+        flask --app run db upgrade
+    """
     with app.app_context():
-        db.create_all()
+        if not inspect(db.engine).has_table("usuarios"):
+            print(
+                "\nO banco ainda não tem as tabelas do EduCore.\n"
+                "Na pasta backend, rode:  flask --app run db upgrade\n"
+                "e depois inicie o sistema de novo.\n",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+
         criar_usuarios_iniciais()
         print("Banco de dados EduCore inicializado com sucesso!")

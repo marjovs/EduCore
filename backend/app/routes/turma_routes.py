@@ -1,9 +1,8 @@
-from flask import Blueprint, current_app, flash, redirect, render_template, request, url_for
-from sqlalchemy.exc import SQLAlchemyError
+from flask import Blueprint, flash, redirect, render_template, request, url_for
 
-from app import db
 from app.acesso import perfil_required
-from app.services import RegraNegocioError, curso_service, turma_service
+from app.routes.acoes import executar
+from app.services import curso_service, turma_service
 from app.validacao import inteiro_seguro, texto_grande_demais
 
 turmas = Blueprint("turmas", __name__, url_prefix="/secretaria/turmas")
@@ -67,6 +66,9 @@ def cadastrar():
         flash("Cadastre um curso ativo antes de criar uma turma.")
         return redirect(url_for("cursos.listar"))
 
+    def tela():
+        return render_template("secretaria/turmas/cadastrar.html", cursos=cursos)
+
     if request.method == "POST":
         dados, erro = _ler_formulario(exigir_status=False)
 
@@ -77,24 +79,16 @@ def cadastrar():
 
         if erro:
             flash(erro)
-            return render_template("secretaria/turmas/cadastrar.html", cursos=cursos)
+            return tela()
 
-        try:
-            turma_service.cadastrar_turma(dados)
-        except RegraNegocioError as e:
-            db.session.rollback()
-            flash(str(e))
-            return render_template("secretaria/turmas/cadastrar.html", cursos=cursos)
-        except SQLAlchemyError:
-            db.session.rollback()
-            current_app.logger.exception("Erro ao cadastrar turma")
-            flash("Erro ao cadastrar turma.")
-            return render_template("secretaria/turmas/cadastrar.html", cursos=cursos)
+        falha = executar(lambda: turma_service.cadastrar_turma(dados), "Erro ao cadastrar turma.", tela)
+        if falha:
+            return falha
 
         flash("Turma cadastrada com sucesso!")
         return redirect(url_for("turmas.listar"))
 
-    return render_template("secretaria/turmas/cadastrar.html", cursos=cursos)
+    return tela()
 
 
 @turmas.route("/editar/<int:id>", methods=["GET", "POST"])
@@ -105,6 +99,9 @@ def editar(id):
     cursos = curso_service.listar_cursos_ativos()
     if turma.curso not in cursos:
         cursos.append(turma.curso)
+
+    def tela():
+        return render_template("secretaria/turmas/editar.html", turma=turma, cursos=cursos)
 
     if request.method == "POST":
         dados, erro = _ler_formulario(exigir_status=True)
@@ -118,24 +115,16 @@ def editar(id):
 
         if erro:
             flash(erro)
-            return render_template("secretaria/turmas/editar.html", turma=turma, cursos=cursos)
+            return tela()
 
-        try:
-            turma_service.atualizar_turma(turma, dados)
-        except RegraNegocioError as e:
-            db.session.rollback()
-            flash(str(e))
-            return render_template("secretaria/turmas/editar.html", turma=turma, cursos=cursos)
-        except SQLAlchemyError:
-            db.session.rollback()
-            current_app.logger.exception("Erro ao atualizar turma")
-            flash("Erro ao atualizar turma.")
-            return render_template("secretaria/turmas/editar.html", turma=turma, cursos=cursos)
+        falha = executar(lambda: turma_service.atualizar_turma(turma, dados), "Erro ao atualizar turma.", tela)
+        if falha:
+            return falha
 
         flash("Turma atualizada com sucesso!")
         return redirect(url_for("turmas.listar"))
 
-    return render_template("secretaria/turmas/editar.html", turma=turma, cursos=cursos)
+    return tela()
 
 
 @turmas.route("/excluir/<int:id>", methods=["POST"])
@@ -143,16 +132,12 @@ def editar(id):
 def excluir(id):
     turma = turma_service.buscar_turma(id)
 
-    try:
-        turma_service.excluir_turma(turma)
-    except RegraNegocioError as e:
-        flash(str(e))
-        return redirect(url_for("turmas.listar"))
-    except SQLAlchemyError:
-        db.session.rollback()
-        current_app.logger.exception("Erro ao excluir turma")
-        flash("Não foi possível excluir a turma.")
+    def voltar():
         return redirect(url_for("turmas.listar"))
 
+    falha = executar(lambda: turma_service.excluir_turma(turma), "Não foi possível excluir a turma.", voltar)
+    if falha:
+        return falha
+
     flash("Turma excluída com sucesso!")
-    return redirect(url_for("turmas.listar"))
+    return voltar()

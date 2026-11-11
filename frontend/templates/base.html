@@ -1,52 +1,73 @@
+{#
+    Layout de todas as páginas.
+
+    Blocos:
+      titulo   -> texto da aba do navegador, depois de "EduCore | "
+      content  -> conteúdo da página
+
+    A cor do cabeçalho segue o perfil logado (secretaria azul, coordenação e
+    instrutor roxo). Sem login (tela de entrar), não há cabeçalho e o botão de
+    tema fica flutuando no canto.
+#}
+{% set perfil_logado = session.get('perfil') %}
+{% set cabecalho = {
+    'secretaria': {'nome': 'Secretaria', 'cor': 'bg-blue-800', 'botao': 'bg-blue-900 hover:bg-blue-950'},
+    'coordenacao': {'nome': 'Coordenação', 'cor': 'bg-purple-700', 'botao': 'bg-purple-900 hover:bg-purple-950'},
+    'instrutor': {'nome': 'Instrutor', 'cor': 'bg-purple-700', 'botao': 'bg-purple-900 hover:bg-purple-950'},
+}.get(perfil_logado) %}
+{% import "_botao_tema.html" as tema %}
 <!DOCTYPE html>
 <html lang="pt-br">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>
-            EduCore | Gestão Acadêmica
-        </title>
+        <title>EduCore | {% block titulo %}Gestão acadêmica{% endblock %}</title>
 
-        <script src="https://cdn.tailwindcss.com"></script>
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/tailwind.css') }}">
         {% include "_tema.html" %}
     </head>
-    <body class="bg-gray-100 min-h-screen">
-        <!-- Cabeçalho -->
-        <header class="bg-purple-700 text-white shadow-md">
-            <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-                <a href="{{ url_for('auth.dashboard') }}" class="text-2xl font-bold tracking-wide">
-                    EduCore
+    <body class="bg-gray-100 min-h-screen flex flex-col">
+        {% if cabecalho %}
+        <header class="{{ cabecalho.cor }} text-white shadow-md">
+            <div class="max-w-7xl mx-auto px-6 py-4 flex flex-wrap justify-between items-center gap-3">
+                <a href="{{ url_for('auth.dashboard') }}" class="leading-tight">
+                    <span class="block text-2xl font-bold tracking-wide">EduCore</span>
+                    <span class="block text-sm text-white/80">{{ cabecalho.nome }}</span>
                 </a>
-                {% import "_botao_tema.html" as tema %}
-                <div class="flex items-center gap-4">
-                    <!-- Botão de alternar tema (o clique é tratado em _tema.html) -->
+
+                <div class="flex items-center gap-3">
                     <button type="button" data-alternar-tema title="Alternar modo claro/escuro" aria-label="Alternar modo claro/escuro"
-                        class="p-2 rounded-lg bg-purple-800 hover:bg-purple-900 dark:bg-purple-700 dark:hover:bg-purple-600 transition">
+                        class="p-2 rounded-lg {{ cabecalho.botao }} transition">
                         {{ tema.icones() }}
                     </button>
 
-                    {% if session.get('usuario') %}
                     <span class="text-sm hidden md:block">
                         {{ session.get('usuario') }}
                     </span>
 
-                    <a href="{{ url_for('auth.logout') }}" class="bg-purple-900 hover:bg-purple-950 dark:bg-purple-700 dark:hover:bg-purple-600 px-4 py-2 rounded-lg text-sm">
+                    <a href="{{ url_for('auth.minha_senha') }}" class="px-3 py-2 rounded-lg text-sm hover:bg-white/10">
+                        Minha senha
+                    </a>
+
+                    <a href="{{ url_for('auth.logout') }}" class="{{ cabecalho.botao }} px-4 py-2 rounded-lg text-sm">
                         Sair
                     </a>
-                    {% endif %}
                 </div>
             </div>
         </header>
+        {% endif %}
 
-        <!-- Conteúdo principal -->
-        <main>
+        <main class="flex-1">
             {% block content %}
             {% endblock %}
         </main>
 
-        <!-- Rodapé -->
+        {% if cabecalho %}
         <footer class="text-center text-gray-500 text-sm py-6">
             EduCore © 2026 | Sistema de Gestão Acadêmica
         </footer>
+        {% else %}
+        {{ tema.flutuante() }}
+        {% endif %}
     </body>
 </html>

@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block titulo %}Redefinir senha{% endblock %}
+
+{% block content %}
+<div class="p-6">
+    <div class="max-w-md mx-auto bg-white p-8 rounded-xl shadow">
+        <h1 class="text-2xl font-bold text-gray-800 mb-1">
+            Redefinir senha
+        </h1>
+
+        <p class="text-gray-500 mb-6">
+            {{ usuario.email }}
+        </p>
+
+        {% include "_mensagens.html" %}
+
+        <form method="POST" class="space-y-4">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div>
+                <label for="senha" class="block font-medium mb-1">
+                    Nova senha
+                </label>
+
+                <input type="password" id="senha" name="senha" required minlength="8" maxlength="128" autocomplete="new-password"
+                    class="w-full border border-gray-300 rounded-lg p-3">
+
+                <p class="text-sm text-gray-500 mt-1">
+                    Pelo menos 8 caracteres. Avise a pessoa da nova senha.
+                </p>
+            </div>
+
+            <div>
+                <label for="confirmacao" class="block font-medium mb-1">
+                    Confirmar nova senha
+                </label>
+
+                <input type="password" id="confirmacao" name="confirmacao" required minlength="8" maxlength="128" autocomplete="new-password"
+                    class="w-full border border-gray-300 rounded-lg p-3">
+            </div>
+
+            <div class="flex gap-3 pt-2">
+                <button type="submit" class="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700">
+                    Salvar nova senha
+                </button>
+
+                <a href="{{ url_for('usuarios.listar') }}" class="bg-gray-200 px-6 py-3 rounded-lg hover:bg-gray-300">
+                    Voltar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

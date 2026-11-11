@@ -1,8 +1,12 @@
 {% extends "base.html" %}
 
+{% block titulo %}Coordenação{% endblock %}
+
 {% block content %}
 <div class="min-h-screen bg-gray-100 p-8">
     <div class="max-w-7xl mx-auto">
+        {% include "_mensagens.html" %}
+
         <!-- Cabeçalho -->
         <div class="flex justify-between items-center mb-8">
             <div>
@@ -101,8 +105,18 @@
                         Consultar frequência
                     </h3>
                     
-                    <p class="text-sm text-gray-500 mt-2"> 
+                    <p class="text-sm text-gray-500 mt-2">
                         Acompanhe os registros de presença.
+                    </p>
+                </a>
+
+                <a href="{{ url_for('usuarios.listar') }}" class="p-5 border rounded-lg hover:bg-purple-50 transition">
+                    <h3 class="font-semibold text-purple-700">
+                        Usuários
+                    </h3>
+
+                    <p class="text-sm text-gray-500 mt-2">
+                        Cadastre logins, redefina senhas e remova acessos.
                     </p>
                 </a>
             </div>

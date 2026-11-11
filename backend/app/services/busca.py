@@ -5,6 +5,7 @@ from sqlalchemy import func, or_
 
 from app.models.aluno import Aluno
 from app.models.curso import Curso
+from app.models.matricula import Matricula
 from app.models.turma import Turma
 
 POR_PAGINA = 20
@@ -36,6 +37,32 @@ def condicao_busca(texto, incluir_turma_curso=False):
         condicoes += [Turma.nome.ilike(termo), Curso.nome.ilike(termo)]
 
     return or_(*condicoes)
+
+
+def filtrar_por_matricula_ativa(consulta, relacao_matricula, busca=None, turma_id=None, ano=None):
+    """Filtros das consultas de notas e frequência (secretaria e coordenação).
+
+    relacao_matricula: Nota.matricula ou Frequencia.matricula.
+    Considera só matrículas ativas.
+    """
+    consulta = (
+        consulta
+        .join(relacao_matricula)
+        .join(Matricula.aluno)
+        .join(Matricula.turma)
+        .filter(Matricula.status == "Ativa")
+    )
+
+    if busca:
+        consulta = consulta.filter(condicao_busca(busca))
+
+    if turma_id:
+        consulta = consulta.filter(Matricula.turma_id == turma_id)
+
+    if ano:
+        consulta = consulta.filter(Turma.ano == ano)
+
+    return consulta
 
 
 def paginar(consulta, pagina):

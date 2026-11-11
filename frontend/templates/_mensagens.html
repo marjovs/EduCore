@@ -1,0 +1,14 @@
+{#
+    Mensagens do flash(). Incluir onde a página quiser mostrá-las:
+        {% include "_mensagens.html" %}
+    Mensagens com "sucesso" aparecem em verde; as demais, em vermelho (avisos e erros).
+#}
+{% with mensagens = get_flashed_messages() %}
+{% for mensagem in mensagens %}
+{% set ok = 'sucesso' in mensagem %}
+<p role="{{ 'status' if ok else 'alert' }}"
+    class="{{ 'bg-green-100 text-green-700' if ok else 'bg-red-100 text-red-700' }} p-3 rounded-lg mb-4">
+    {{ mensagem }}
+</p>
+{% endfor %}
+{% endwith %}

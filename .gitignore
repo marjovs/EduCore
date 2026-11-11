@@ -36,3 +36,6 @@ htmlcov/
 # Arquivos temporários
 *.tmp
 *.bak
+
+# Node (Tailwind)
+node_modules/

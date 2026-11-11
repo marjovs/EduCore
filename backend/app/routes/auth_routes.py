@@ -1,7 +1,9 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 
-from app.acesso import PERFIS
+from app.acesso import PERFIS, login_required
 from app.models.usuario import Usuario
+from app.routes.acoes import executar
+from app.services import usuario_service
 
 auth = Blueprint("auth", __name__)
 
@@ -50,3 +52,30 @@ def logout():
     session.clear()
 
     return redirect(url_for("auth.login"))
+
+
+@auth.route("/minha-senha", methods=["GET", "POST"])
+@login_required
+def minha_senha():
+    """Qualquer usuário logado pode trocar a própria senha."""
+    usuario = usuario_service.buscar_por_email(session["usuario"])
+
+    def tela():
+        return render_template("auth/minha_senha.html")
+
+    if request.method == "POST":
+        falha = executar(
+            lambda: usuario_service.trocar_propria_senha(
+                usuario, request.form.get("senha_atual"),
+                request.form.get("senha"), request.form.get("confirmacao"),
+            ),
+            "Erro ao trocar a senha.",
+            tela,
+        )
+        if falha:
+            return falha
+
+        flash("Senha alterada com sucesso!")
+        return redirect(url_for("auth.dashboard"))
+
+    return tela()

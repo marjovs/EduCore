@@ -1,0 +1,7 @@
+# Dependências só para desenvolvimento (testes).
+#   pip install -r backend/requirements-dev.txt
+#   cd backend && python -m pytest
+-r requirements.txt
+pytest==8.4.2
+pyflakes==4.1.0
+pycodestyle==2.15.0

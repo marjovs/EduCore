@@ -5,29 +5,11 @@ from app import db
 from app.models.frequencia import Frequencia
 from app.models.matricula import Matricula
 from app.models.turma import Turma
-from app.services.busca import condicao_busca, paginar
+from app.services.busca import filtrar_por_matricula_ativa, paginar
 
 
 def _consulta_filtrada(consulta, busca=None, turma_id=None, ano=None):
-    """Aplica os filtros da secretaria. Considera só matrículas ativas."""
-    consulta = (
-        consulta
-        .join(Frequencia.matricula)
-        .join(Matricula.aluno)
-        .join(Matricula.turma)
-        .filter(Matricula.status == "Ativa")
-    )
-
-    if busca:
-        consulta = consulta.filter(condicao_busca(busca))
-
-    if turma_id:
-        consulta = consulta.filter(Matricula.turma_id == turma_id)
-
-    if ano:
-        consulta = consulta.filter(Turma.ano == ano)
-
-    return consulta
+    return filtrar_por_matricula_ativa(consulta, Frequencia.matricula, busca, turma_id, ano)
 
 
 def buscar_frequencias(busca=None, turma_id=None, ano=None, pagina=1):

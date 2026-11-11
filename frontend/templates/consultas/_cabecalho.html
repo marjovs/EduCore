@@ -1,0 +1,26 @@
+{#
+    Cores e endpoints das telas de consulta usadas pela secretaria e pela coordenação.
+    Uso dentro do bloco da página:
+        {% import "consultas/_cabecalho.html" as consulta %}
+        {% set estilo = consulta.estilos[area] %}
+#}
+{% set estilos = {
+    'secretaria': {
+        'cor': 'blue',
+        'titulo': 'text-blue-700',
+        'tabela': 'bg-blue-100 text-blue-800',
+        'botao': 'bg-blue-600 hover:bg-blue-700',
+        'painel': 'secretaria.painel',
+        'notas': 'secretaria.notas',
+        'frequencia': 'secretaria.frequencia',
+    },
+    'coordenacao': {
+        'cor': 'purple',
+        'titulo': 'text-gray-800',
+        'tabela': 'bg-purple-100 text-purple-800',
+        'botao': 'bg-purple-600 hover:bg-purple-700',
+        'painel': 'coordenacao.painel',
+        'notas': 'coordenacao.desempenho',
+        'frequencia': 'coordenacao.frequencia',
+    },
+} %}

@@ -1,135 +1,118 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>
-            EduCore | Matrículas
-        </title>
+{% extends "base.html" %}
 
-        <script src="https://cdn.tailwindcss.com"></script>
-        {% include "_tema.html" %}
-    </head>
-    <body class="bg-gray-100 min-h-screen p-6">
-        <div class="max-w-7xl mx-auto">
-            <div class="flex justify-between items-center mb-6">
-                <h1 class="text-3xl font-bold text-blue-700">
-                    Gerenciamento de matrículas
-                </h1>
+{% block titulo %}Matrículas{% endblock %}
 
-                <a href="{{ url_for('matriculas.cadastrar') }}" class="bg-blue-600 text-white px-5 py-3 rounded-lg hover:bg-blue-700"> 
-                    + Nova matrícula
-                </a>
-            </div>
+{% block content %}
+<div class="p-6">
+    <div class="max-w-7xl mx-auto">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-3xl font-bold text-blue-700">
+                Gerenciamento de matrículas
+            </h1>
 
-            {% with mensagens = get_flashed_messages() %}
-            {% if mensagens %}
-            {% for mensagem in mensagens %}
-            <p class="bg-blue-100 text-blue-700 p-3 rounded mb-4">
-                {{ mensagem }}
-            </p>
-            {% endfor %}
-            {% endif %}
-            {% endwith %}
-
-            <nav class="flex gap-2 mb-4">
-                <a href="{{ url_for('matriculas.listar') }}" class="px-4 py-2 rounded-lg text-sm font-medium {{ 'bg-blue-600 text-white' if not ver_canceladas else 'bg-white text-blue-700 hover:bg-blue-50 shadow' }}">
-                    Ativas
-                </a>
-
-                <a href="{{ url_for('matriculas.listar', canceladas=1) }}" class="px-4 py-2 rounded-lg text-sm font-medium {{ 'bg-blue-600 text-white' if ver_canceladas else 'bg-white text-blue-700 hover:bg-blue-50 shadow' }}">
-                    Canceladas ({{ total_canceladas }})
-                </a>
-            </nav>
-
-            {% with endpoint = 'matriculas.listar',
-                    campos_ocultos = {'canceladas': 1} if ver_canceladas else {},
-                    placeholder = 'Aluno, CPF, turma ou curso' %}
-            {% include "_filtros.html" %}
-            {% endwith %}
-
-            <div class="bg-white rounded-xl shadow overflow-x-auto">
-                <table class="w-full text-left">
-                    <thead class="bg-blue-100 text-blue-800">
-                        <tr>
-                            <th class="p-4">
-                                ID
-                            </th>
-                            <th class="p-4">
-                                Aluno
-                            </th>
-                            <th class="p-4">
-                                Curso
-                            </th>
-                            <th class="p-4">
-                                Turma
-                            </th>
-                            <th class="p-4">
-                                Data
-                            </th>
-                            <th class="p-4">
-                                Status
-                            </th>
-                            <th class="p-4">
-                                Ações
-                            </th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        {% for matricula in pagina.items %}
-                        <tr class="border-t hover:bg-gray-50">
-                            <td class="p-4">
-                                {{ matricula.id }}
-                            </td>
-                            <td class="p-4">
-                                {{ matricula.aluno.nome }}
-                            </td>
-                            <td class="p-4">
-                                {{ matricula.turma.curso.nome }}
-                            </td>
-                            <td class="p-4">
-                                {{ matricula.turma.nome }}
-                            </td>
-                            <td class="p-4">
-                                {{ matricula.data_matricula.strftime('%d/%m/%Y') }}
-                            </td>
-                            <td class="p-4">
-                                {{ matricula.status }}
-                            </td>
-                            <td class="p-4">
-                                {% import "secretaria/_acoes.html" as acoes with context %}
-                                {% if matricula.status == "Ativa" %}
-                                {{ acoes.confirmar(url_for('matriculas.cancelar', id=matricula.id), "Cancelar", "Deseja realmente cancelar esta matrícula?", icone="cancelar") }}
-                                {% else %}
-                                {{ acoes.nenhuma() }}
-                                {% endif %}
-                            </td>
-                        </tr>
-
-                        {% else %}
-
-                        <tr>
-                            <td colspan="7" class="p-6 text-center text-gray-500">
-                                {% if filtros.busca or filtros.ano %}
-                                Nenhuma matrícula encontrada para esta busca.
-                                {% else %}
-                                {{ 'Nenhuma matrícula cancelada.' if ver_canceladas else 'Nenhuma matrícula ativa.' }}
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-
-            {% include "_paginacao.html" %}
-
-            <a href="{{ url_for('secretaria.painel') }}" class="inline-block mt-6 text-blue-600 hover:underline">
-                Voltar ao painel
+            <a href="{{ url_for('matriculas.cadastrar') }}" class="bg-blue-600 text-white px-5 py-3 rounded-lg hover:bg-blue-700"> 
+                + Nova matrícula
             </a>
         </div>
-        {% import "_botao_tema.html" as tema %}
-        {{ tema.flutuante() }}
-    </body>
-</html>
+
+        {% include "_mensagens.html" %}
+
+        <nav class="flex gap-2 mb-4">
+            <a href="{{ url_for('matriculas.listar') }}" class="px-4 py-2 rounded-lg text-sm font-medium {{ 'bg-blue-600 text-white' if not ver_canceladas else 'bg-white text-blue-700 hover:bg-blue-50 shadow' }}">
+                Ativas
+            </a>
+
+            <a href="{{ url_for('matriculas.listar', canceladas=1) }}" class="px-4 py-2 rounded-lg text-sm font-medium {{ 'bg-blue-600 text-white' if ver_canceladas else 'bg-white text-blue-700 hover:bg-blue-50 shadow' }}">
+                Canceladas ({{ total_canceladas }})
+            </a>
+        </nav>
+
+        {% with endpoint = 'matriculas.listar',
+                campos_ocultos = {'canceladas': 1} if ver_canceladas else {},
+                placeholder = 'Aluno, CPF, turma ou curso' %}
+        {% include "_filtros.html" %}
+        {% endwith %}
+
+        <div class="bg-white rounded-xl shadow overflow-x-auto">
+            <table class="w-full text-left">
+                <thead class="bg-blue-100 text-blue-800">
+                    <tr>
+                        <th class="p-4">
+                            ID
+                        </th>
+                        <th class="p-4">
+                            Aluno
+                        </th>
+                        <th class="p-4">
+                            Curso
+                        </th>
+                        <th class="p-4">
+                            Turma
+                        </th>
+                        <th class="p-4">
+                            Data
+                        </th>
+                        <th class="p-4">
+                            Status
+                        </th>
+                        <th class="p-4">
+                            Ações
+                        </th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for matricula in pagina.items %}
+                    <tr class="border-t hover:bg-gray-50">
+                        <td class="p-4">
+                            {{ matricula.id }}
+                        </td>
+                        <td class="p-4">
+                            {{ matricula.aluno.nome }}
+                        </td>
+                        <td class="p-4">
+                            {{ matricula.turma.curso.nome }}
+                        </td>
+                        <td class="p-4">
+                            {{ matricula.turma.nome }}
+                        </td>
+                        <td class="p-4">
+                            {{ matricula.data_matricula.strftime('%d/%m/%Y') }}
+                        </td>
+                        <td class="p-4">
+                            {{ matricula.status }}
+                        </td>
+                        <td class="p-4">
+                            {% import "secretaria/_acoes.html" as acoes with context %}
+                            {% if matricula.status == "Ativa" %}
+                            {{ acoes.confirmar(url_for('matriculas.cancelar', id=matricula.id), "Cancelar", "Deseja realmente cancelar esta matrícula?", icone="cancelar") }}
+                            {% else %}
+                            {{ acoes.nenhuma() }}
+                            {% endif %}
+                        </td>
+                    </tr>
+
+                    {% else %}
+
+                    <tr>
+                        <td colspan="7" class="p-6 text-center text-gray-500">
+                            {% if filtros.busca or filtros.ano %}
+                            Nenhuma matrícula encontrada para esta busca.
+                            {% else %}
+                            {{ 'Nenhuma matrícula cancelada.' if ver_canceladas else 'Nenhuma matrícula ativa.' }}
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% include "_paginacao.html" %}
+
+        <a href="{{ url_for('secretaria.painel') }}" class="inline-block mt-6 text-blue-600 hover:underline">
+            Voltar ao painel
+        </a>
+    </div>
+</div>
+{% endblock %}

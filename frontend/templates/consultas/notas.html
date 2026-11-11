@@ -1,25 +1,33 @@
+{#
+    Consulta de notas, usada pela secretaria (Notas) e pela coordenação (Desempenho).
+    Espera: area, pagina, resumo, filtros, turmas, anos.
+#}
 {% extends "base.html" %}
 
+{% block titulo %}{{ 'Desempenho acadêmico' if area == 'coordenacao' else 'Notas' }}{% endblock %}
+
 {% block content %}
-<div class="min-h-screen bg-gray-100 p-8">
+{% import "consultas/_cabecalho.html" as consulta %}
+{% set estilo = consulta.estilos[area] %}
+<div class="p-6">
     <div class="max-w-7xl mx-auto">
-        <div class="flex justify-between items-center mb-8">
+        <div class="flex flex-wrap justify-between items-center gap-4 mb-6">
             <div>
-                <h1 class="text-3xl font-bold text-gray-800">
-                    Desempenho acadêmico
+                <h1 class="text-3xl font-bold {{ estilo.titulo }}">
+                    {{ 'Desempenho acadêmico' if area == 'coordenacao' else 'Notas dos alunos' }}
                 </h1>
 
-                <p class="text-gray-500 mt-2">
-                    Consulta das notas registradas pelos instrutores.
+                <p class="text-gray-500 mt-1">
+                    Notas lançadas pelos instrutores nas matrículas ativas.
                 </p>
             </div>
 
-            <a href="{{ url_for('coordenacao.painel') }}" class="bg-purple-600 hover:bg-purple-700 text-white px-5 py-2 rounded-lg">
+            <a href="{{ url_for(estilo.painel) }}" class="{{ estilo.botao }} text-white px-5 py-2 rounded-lg">
                 Voltar ao painel
             </a>
         </div>
 
-        {% with endpoint = 'coordenacao.desempenho', cor = 'purple' %}
+        {% with endpoint = estilo.notas, cor = estilo.cor %}
         {% include "_filtros.html" %}
         {% endwith %}
 
@@ -47,16 +55,16 @@
 
         <div class="bg-white rounded-xl shadow overflow-x-auto">
             <table class="w-full text-left">
-                <thead class="bg-purple-100 text-purple-800">
+                <thead class="{{ estilo.tabela }}">
                     <tr>
                         <th class="p-4">
                             Aluno
                         </th>
                         <th class="p-4">
-                            Turma
+                            Curso
                         </th>
                         <th class="p-4">
-                            Curso
+                            Turma
                         </th>
                         <th class="p-4">
                             Avaliação
@@ -72,21 +80,21 @@
 
                 <tbody>
                     {% for nota in pagina.items %}
-                    <tr class="border-b hover:bg-gray-50">
+                    <tr class="border-t hover:bg-gray-50">
                         <td class="p-4">
                             {{ nota.matricula.aluno.nome }}
-                        </td>
-                        <td class="p-4">
-                            {{ nota.matricula.turma.nome }}
                         </td>
                         <td class="p-4">
                             {{ nota.matricula.turma.curso.nome }}
                         </td>
                         <td class="p-4">
+                            {{ nota.matricula.turma.nome }}
+                        </td>
+                        <td class="p-4">
                             {{ nota.avaliacao }}
                         </td>
                         <td class="p-4">
-                            <span class="font-semibold text-purple-700">
+                            <span class="font-semibold {{ 'text-green-700' if nota.valor >= 6 else 'text-red-600' }}">
                                 {{ "%.1f"|format(nota.valor) }}
                             </span>
                         </td>
@@ -105,7 +113,7 @@
             </table>
         </div>
 
-        {% with cor = 'purple' %}
+        {% with cor = estilo.cor %}
         {% include "_paginacao.html" %}
         {% endwith %}
     </div>

@@ -1,0 +1,4 @@
+/* Arquivo de entrada do Tailwind. O resultado vai para tailwind.css (npm run css). */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

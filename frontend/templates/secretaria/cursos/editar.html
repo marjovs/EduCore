@@ -1,100 +1,85 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>
-            EduCore | Editar curso
-        </title>
+{% extends "base.html" %}
 
-        <script src="https://cdn.tailwindcss.com"></script>
-        {% include "_tema.html" %}
-    </head>
-    <body class="bg-slate-100 min-h-screen p-6">
-        <main class="max-w-2xl mx-auto bg-white p-8 rounded-2xl shadow">
-            <a href="{{ url_for('cursos.listar') }}" class="text-blue-700 hover:underlinebg-purple-600 hover:bg-purple-700 text-white px-5 py-2 rounded-lg">
-                Voltar para cursos
-            </a>
+{% block titulo %}Editar curso{% endblock %}
 
-            <h1 class="text-2xl font-bold mt-5 mb-6">
-                Editar curso
-            </h1>
+{% block content %}
+<div class="p-6">
+    <div class="max-w-2xl mx-auto bg-white p-8 rounded-2xl shadow">
+        <a href="{{ url_for('cursos.listar') }}" class="text-blue-700 hover:underlinebg-purple-600 hover:bg-purple-700 text-white px-5 py-2 rounded-lg">
+            Voltar para cursos
+        </a>
 
-            {% with mensagens = get_flashed_messages() %}
-            {% for mensagem in mensagens %}
-            <p class="text-red-600 mb-4">
-                {{ mensagem }}
-            </p>
-            {% endfor %}
-            {% endwith %}
+        <h1 class="text-2xl font-bold mt-5 mb-6">
+            Editar curso
+        </h1>
 
-            <form method="POST" class="space-y-4">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        {% include "_mensagens.html" %}
 
-                <div>
-                    <label class="block mb-1 font-medium">
-                        Nome do curso *
-                    </label>
+        <form method="POST" class="space-y-4">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-                    <input type="text" name="nome" required maxlength="120" value="{{ curso.nome }}" class="w-full border rounded-lg p-3">
-                </div>
+            <div>
+                <label class="block mb-1 font-medium">
+                    Nome do curso *
+                </label>
 
-                <div>
-                    <label class="block mb-1 font-medium">
-                        Descrição
-                    </label>
+                <input type="text" name="nome" required maxlength="120" value="{{ curso.nome }}" class="w-full border rounded-lg p-3">
+            </div>
 
-                    <textarea name="descricao" rows="3" class="w-full border rounded-lg p-3">
-                        {{ curso.descricao or '' }}
-                    </textarea>
-                </div>
+            <div>
+                <label class="block mb-1 font-medium">
+                    Descrição
+                </label>
 
-                <div>
-                    <label class="block mb-1 font-medium">
-                        Carga horária (horas) *
-                    </label>
+                <textarea name="descricao" rows="3" class="w-full border rounded-lg p-3">
+                    {{ curso.descricao or '' }}
+                </textarea>
+            </div>
 
-                    <input type="number" name="carga_horaria" min="1" max="20000" required value="{{ curso.carga_horaria }}" class="w-full border rounded-lg p-3">
-                </div>
+            <div>
+                <label class="block mb-1 font-medium">
+                    Carga horária (horas) *
+                </label>
 
-                <div>
-                    <label class="block mb-1 font-medium">
-                        Modalidade *
-                    </label>
+                <input type="number" name="carga_horaria" min="1" max="20000" required value="{{ curso.carga_horaria }}" class="w-full border rounded-lg p-3">
+            </div>
 
-                    <select name="modalidade" required class="w-full border rounded-lg p-3">
-                        <option value="Presencial" {% if curso.modalidade == 'Presencial' %}selected{% endif %}>
-                            Presencial
-                        </option>
-                        <option value="EAD" {% if curso.modalidade == 'EAD' %}selected{% endif %}>
-                            EAD
-                        </option>
-                        <option value="Híbrido" {% if curso.modalidade == 'Híbrido' %}selected{% endif %}>
-                            Híbrido
-                        </option>
-                    </select>
-                </div>
+            <div>
+                <label class="block mb-1 font-medium">
+                    Modalidade *
+                </label>
 
-                <div>
-                    <label class="block mb-1 font-medium">
-                        Status
-                    </label>
-                    <select name="status" class="w-full border rounded-lg p-3">
-                        <option value="Ativo" {% if curso.status == 'Ativo' %}selected{% endif %}>
-                            Ativo
-                        </option>
-                        <option value="Inativo" {% if curso.status == 'Inativo' %}selected{% endif %}>
-                            Inativo
-                        </option>
-                    </select>
-                </div>
+                <select name="modalidade" required class="w-full border rounded-lg p-3">
+                    <option value="Presencial" {% if curso.modalidade == 'Presencial' %}selected{% endif %}>
+                        Presencial
+                    </option>
+                    <option value="EAD" {% if curso.modalidade == 'EAD' %}selected{% endif %}>
+                        EAD
+                    </option>
+                    <option value="Híbrido" {% if curso.modalidade == 'Híbrido' %}selected{% endif %}>
+                        Híbrido
+                    </option>
+                </select>
+            </div>
 
-                <button type="submit" class="w-full bg-blue-700 text-white py-3 rounded-lg hover:bg-blue-800">
-                    Salvar alterações
-                </button>
-            </form>
-        </main>
-        {% import "_botao_tema.html" as tema %}
-        {{ tema.flutuante() }}
-    </body>
-</html>
+            <div>
+                <label class="block mb-1 font-medium">
+                    Status
+                </label>
+                <select name="status" class="w-full border rounded-lg p-3">
+                    <option value="Ativo" {% if curso.status == 'Ativo' %}selected{% endif %}>
+                        Ativo
+                    </option>
+                    <option value="Inativo" {% if curso.status == 'Inativo' %}selected{% endif %}>
+                        Inativo
+                    </option>
+                </select>
+            </div>
+
+            <button type="submit" class="w-full bg-blue-700 text-white py-3 rounded-lg hover:bg-blue-800">
+                Salvar alterações
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

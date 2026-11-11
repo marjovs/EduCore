@@ -1,12 +1,11 @@
 from datetime import datetime
 
-from flask import Blueprint, current_app, flash, jsonify, redirect, render_template, request, url_for
-from sqlalchemy.exc import SQLAlchemyError
+from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for
 
-from app import db
 from app.acesso import perfil_required
+from app.routes.acoes import executar
 from app.routes.filtros import ler_filtros
-from app.services import RegraNegocioError, aluno_service
+from app.services import aluno_service
 from app.validacao import (
     cpf_valido,
     data_nascimento_valida,
@@ -94,29 +93,25 @@ def buscar():
 @alunos.route("/cadastrar", methods=["GET", "POST"])
 @perfil_required("secretaria")
 def cadastrar():
+    def tela():
+        return render_template("secretaria/alunos/cadastrar.html")
+
     if request.method == "POST":
         dados, erro = _ler_formulario()
 
         if erro:
             flash(erro)
-            return render_template("secretaria/alunos/cadastrar.html")
+            return tela()
 
-        try:
-            aluno_service.cadastrar_aluno(dados)
-        except RegraNegocioError as e:
-            db.session.rollback()
-            flash(str(e))
-            return render_template("secretaria/alunos/cadastrar.html")
-        except SQLAlchemyError:
-            db.session.rollback()
-            current_app.logger.exception("Erro ao cadastrar aluno")
-            flash("Erro ao cadastrar aluno. Verifique os dados.")
-            return render_template("secretaria/alunos/cadastrar.html")
+        falha = executar(lambda: aluno_service.cadastrar_aluno(dados),
+                         "Erro ao cadastrar aluno. Verifique os dados.", tela)
+        if falha:
+            return falha
 
         flash("Aluno cadastrado com sucesso!")
         return redirect(url_for("alunos.listar"))
 
-    return render_template("secretaria/alunos/cadastrar.html")
+    return tela()
 
 
 @alunos.route("/editar/<int:id>", methods=["GET", "POST"])
@@ -124,29 +119,25 @@ def cadastrar():
 def editar(id):
     aluno = aluno_service.buscar_aluno(id)
 
+    def tela():
+        return render_template("secretaria/alunos/editar.html", aluno=aluno)
+
     if request.method == "POST":
         dados, erro = _ler_formulario()
 
         if erro:
             flash(erro)
-            return render_template("secretaria/alunos/editar.html", aluno=aluno)
+            return tela()
 
-        try:
-            aluno_service.atualizar_aluno(aluno, dados)
-        except RegraNegocioError as e:
-            db.session.rollback()
-            flash(str(e))
-            return render_template("secretaria/alunos/editar.html", aluno=aluno)
-        except SQLAlchemyError:
-            db.session.rollback()
-            current_app.logger.exception("Erro ao atualizar aluno")
-            flash("Erro ao atualizar aluno. Verifique os dados.")
-            return render_template("secretaria/alunos/editar.html", aluno=aluno)
+        falha = executar(lambda: aluno_service.atualizar_aluno(aluno, dados),
+                         "Erro ao atualizar aluno. Verifique os dados.", tela)
+        if falha:
+            return falha
 
         flash("Aluno atualizado com sucesso!")
         return redirect(url_for("alunos.listar"))
 
-    return render_template("secretaria/alunos/editar.html", aluno=aluno)
+    return tela()
 
 
 @alunos.route("/excluir/<int:id>", methods=["POST"])
@@ -154,16 +145,12 @@ def editar(id):
 def excluir(id):
     aluno = aluno_service.buscar_aluno(id)
 
-    try:
-        aluno_service.excluir_aluno(aluno)
-    except RegraNegocioError as e:
-        flash(str(e))
-        return redirect(url_for("alunos.listar"))
-    except SQLAlchemyError:
-        db.session.rollback()
-        current_app.logger.exception("Erro ao excluir aluno")
-        flash("Não foi possível excluir o aluno.")
+    def voltar():
         return redirect(url_for("alunos.listar"))
 
+    falha = executar(lambda: aluno_service.excluir_aluno(aluno), "Não foi possível excluir o aluno.", voltar)
+    if falha:
+        return falha
+
     flash("Aluno excluído com sucesso!")
-    return redirect(url_for("alunos.listar"))
+    return voltar()

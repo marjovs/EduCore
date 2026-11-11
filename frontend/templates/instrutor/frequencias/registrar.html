@@ -1,117 +1,100 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>
-            EduCore | Registrar frequência
-        </title>
+{% extends "base.html" %}
 
-        <script src="https://cdn.tailwindcss.com"></script>
-        {% include "_tema.html" %}
-    </head>
-    <body class="bg-gray-100 min-h-screen p-6">
-        <div class="max-w-6xl mx-auto">
-            <div class="bg-white rounded-xl shadow p-8">
-                <h1 class="text-2xl font-bold text-blue-700 mb-2">
-                    Registrar frequência
-                </h1>
+{% block titulo %}Registrar frequência{% endblock %}
 
-                <p class="text-gray-600 mb-6">
-                    {{ turma.nome }} - {{ turma.curso.nome }}
-                </p>
+{% block content %}
+<div class="p-6">
+    <div class="max-w-6xl mx-auto">
+        <div class="bg-white rounded-xl shadow p-8">
+            <h1 class="text-2xl font-bold text-blue-700 mb-2">
+                Registrar frequência
+            </h1>
 
-                {% with mensagens = get_flashed_messages() %}
-                {% if mensagens %}
-                {% for mensagem in mensagens %}
-                <p class="bg-blue-100 text-blue-700 p-3 rounded mb-4">
-                    {{ mensagem }}
-                </p>
-                {% endfor %}
-                {% endif %}
-                {% endwith %}
+            <p class="text-gray-600 mb-6">
+                {{ turma.nome }} - {{ turma.curso.nome }}
+            </p>
 
-                <form method="POST">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            {% include "_mensagens.html" %}
 
-                    <div class="mb-6">
-                        <label class="block font-medium mb-2">
-                            Data da aula
-                        </label>
+            <form method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-                        <input type="date" name="data" required value="{{ data_hoje }}" class="border rounded-lg p-3">
-                    </div>
+                <div class="mb-6">
+                    <label class="block font-medium mb-2">
+                        Data da aula
+                    </label>
 
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left">
-                            <thead class="bg-blue-100 text-blue-800">
-                                <tr>
-                                    <th class="p-4">
-                                        Aluno
-                                    </th>
-                                    <th class="p-4">
-                                        CPF
-                                    </th>
-                                    <th class="p-4">
-                                        Frequência
-                                    </th>
-                                </tr>
-                            </thead>
+                    <input type="date" name="data" required value="{{ data_hoje }}" class="border rounded-lg p-3">
+                </div>
 
-                            <tbody>
-                                {% for matricula in matriculas %}
-                                <tr class="border-t">
-                                    <td class="p-4">
-                                        {{ matricula.aluno.nome }}
-                                    </td>
-                                    <td class="p-4">
-                                        {{ matricula.aluno.cpf|cpf }}
-                                    </td>
-                                    <td class="p-4">
-                                        <select name="status_{{ matricula.id }}" required class="border rounded-lg p-2">
-                                            <option value="">
-                                                Selecione
-                                            </option>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead class="bg-blue-100 text-blue-800">
+                            <tr>
+                                <th class="p-4">
+                                    Aluno
+                                </th>
+                                <th class="p-4">
+                                    CPF
+                                </th>
+                                <th class="p-4">
+                                    Frequência
+                                </th>
+                            </tr>
+                        </thead>
 
-                                            <option value="Presente">
-                                                Presente
-                                            </option>
+                        <tbody>
+                            {% for matricula in matriculas %}
+                            <tr class="border-t">
+                                <td class="p-4">
+                                    {{ matricula.aluno.nome }}
+                                </td>
+                                <td class="p-4">
+                                    {{ matricula.aluno.cpf|cpf }}
+                                </td>
+                                <td class="p-4">
+                                    <select name="status_{{ matricula.id }}" required class="border rounded-lg p-2">
+                                        <option value="">
+                                            Selecione
+                                        </option>
 
-                                            <option value="Falta">
-                                                Falta
-                                            </option>
-                                        </select>
-                                    </td>
-                                </tr>
+                                        <option value="Presente">
+                                            Presente
+                                        </option>
 
-                                {% else %}
+                                        <option value="Falta">
+                                            Falta
+                                        </option>
+                                    </select>
+                                </td>
+                            </tr>
 
-                                <tr>
-                                    <td colspan="3" class="p-6 text-center text-gray-500">
-                                        Nenhum aluno matriculado nesta turma.
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
+                            {% else %}
 
-                    <div class="flex gap-3 mt-6">
-                        {% if matriculas %}
-                        <button type="submit" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700">
-                            Salvar frequência
-                        </button>
+                            <tr>
+                                <td colspan="3" class="p-6 text-center text-gray-500">
+                                    Nenhum aluno matriculado nesta turma.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
 
-                        {% endif %}
+                <div class="flex gap-3 mt-6">
+                    {% if matriculas %}
+                    <button type="submit" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700">
+                        Salvar frequência
+                    </button>
 
-                        <a href="{{ url_for('frequencias.listar') }}" class="bg-gray-200 px-6 py-3 rounded-lg hover:bg-gray-300">
-                            Voltar
-                        </a>
-                    </div>
-                </form>
-            </div>
+                    {% endif %}
+
+                    <a href="{{ url_for('frequencias.listar') }}" class="bg-gray-200 px-6 py-3 rounded-lg hover:bg-gray-300">
+                        Voltar
+                    </a>
+                </div>
+            </form>
         </div>
-        {% import "_botao_tema.html" as tema %}
-        {{ tema.flutuante() }}
-    </body>
-</html>
+    </div>
+</div>
+{% endblock %}

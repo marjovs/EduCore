@@ -1,0 +1,12 @@
+{
+  "name": "educore",
+  "private": true,
+  "description": "Gera o CSS do Tailwind do EduCore (frontend/static/css/tailwind.css).",
+  "scripts": {
+    "css": "tailwindcss -i frontend/static/css/entrada.css -o frontend/static/css/tailwind.css --minify",
+    "css:watch": "tailwindcss -i frontend/static/css/entrada.css -o frontend/static/css/tailwind.css --watch"
+  },
+  "devDependencies": {
+    "tailwindcss": "3.4.17"
+  }
+}

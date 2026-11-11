@@ -1,115 +1,98 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>
-            EduCore | Registrar notas
-        </title>
+{% extends "base.html" %}
 
-        <script src="https://cdn.tailwindcss.com"></script>
-        {% include "_tema.html" %}
-    </head>
-    <body class="bg-gray-100 min-h-screen p-6">
-        <div class="max-w-6xl mx-auto">
-            <div class="bg-white rounded-xl shadow p-8">
-            <h1 class="text-2xl font-bold text-blue-700 mb-2">
-                Registrar notas
-            </h1>
+{% block titulo %}Registrar notas{% endblock %}
 
-            <p class="text-gray-600 mb-6">
-                {{ turma.nome }} - {{ turma.curso.nome }}
-            </p>
+{% block content %}
+<div class="p-6">
+    <div class="max-w-6xl mx-auto">
+        <div class="bg-white rounded-xl shadow p-8">
+        <h1 class="text-2xl font-bold text-blue-700 mb-2">
+            Registrar notas
+        </h1>
 
-            {% with mensagens = get_flashed_messages() %}
-            {% if mensagens %}
-            {% for mensagem in mensagens %}
-            <p class="bg-blue-100 text-blue-700 p-3 rounded mb-4">
-                {{ mensagem }}
-            </p>
-            {% endfor %}
-            {% endif %}
-            {% endwith %}
+        <p class="text-gray-600 mb-6">
+            {{ turma.nome }} - {{ turma.curso.nome }}
+        </p>
 
-            <form method="POST">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        {% include "_mensagens.html" %}
 
-                <div class="grid md:grid-cols-2 gap-4 mb-6">
-                    <div>
-                        <label class="block font-medium mb-2">
-                            Nome da avaliação
-                        </label>
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-                        <input type="text" name="avaliacao" required maxlength="100" placeholder="Ex.: Prova 1" class="w-full border rounded-lg p-3">
-                    </div>
+            <div class="grid md:grid-cols-2 gap-4 mb-6">
+                <div>
+                    <label class="block font-medium mb-2">
+                        Nome da avaliação
+                    </label>
 
-                    <div>
-                        <label class="block font-medium mb-2">
-                            Data da avaliação
-                        </label>
-
-                        <input type="date" name="data" required value="{{ data_hoje }}" class="w-full border rounded-lg p-3">
-                    </div>
+                    <input type="text" name="avaliacao" required maxlength="100" placeholder="Ex.: Prova 1" class="w-full border rounded-lg p-3">
                 </div>
 
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left">
-                        <thead class="bg-blue-100 text-blue-800">
-                            <tr>
-                                <th class="p-4">
-                                    Aluno
-                                </th>
-                                <th class="p-4">
-                                    CPF
-                                </th>
-                                <th class="p-4">
-                                    Nota (0 a 10)
-                                </th>
-                            </tr>
-                        </thead>
+                <div>
+                    <label class="block font-medium mb-2">
+                        Data da avaliação
+                    </label>
 
-                        <tbody>
-                            {% for matricula in matriculas %}
-                            <tr class="border-t">
-                                <td class="p-4">
-                                    {{ matricula.aluno.nome }}
-                                </td>
-                                <td class="p-4">
-                                    {{ matricula.aluno.cpf|cpf }}
-                                </td>
-                                <td class="p-4">
-                                    <input type="number" name="nota_{{ matricula.id }}" min="0" max="10" step="0.1" required placeholder="0,0" class="border rounded-lg p-2 w-32">
-                                </td>
-                            </tr>
-
-                            {% else %}
-
-                            <tr>
-                                <td colspan="3" class="p-6 text-center text-gray-500">
-                                    Nenhum aluno matriculado nesta turma.
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                    <input type="date" name="data" required value="{{ data_hoje }}" class="w-full border rounded-lg p-3">
                 </div>
-
-                <div class="flex gap-3 mt-6">
-                    {% if matriculas %}
-                    <button type="submit" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700">
-                        Salvar notas
-                    </button>
-
-                    {% endif %}
-
-                    <a href="{{ url_for('notas.listar') }}" class="bg-gray-200 px-6 py-3 rounded-lg hover:bg-gray-300">
-                        Voltar
-                    </a>
-                </div>
-            </form>
             </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead class="bg-blue-100 text-blue-800">
+                        <tr>
+                            <th class="p-4">
+                                Aluno
+                            </th>
+                            <th class="p-4">
+                                CPF
+                            </th>
+                            <th class="p-4">
+                                Nota (0 a 10)
+                            </th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for matricula in matriculas %}
+                        <tr class="border-t">
+                            <td class="p-4">
+                                {{ matricula.aluno.nome }}
+                            </td>
+                            <td class="p-4">
+                                {{ matricula.aluno.cpf|cpf }}
+                            </td>
+                            <td class="p-4">
+                                <input type="number" name="nota_{{ matricula.id }}" min="0" max="10" step="0.1" required placeholder="0,0" class="border rounded-lg p-2 w-32">
+                            </td>
+                        </tr>
+
+                        {% else %}
+
+                        <tr>
+                            <td colspan="3" class="p-6 text-center text-gray-500">
+                                Nenhum aluno matriculado nesta turma.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="flex gap-3 mt-6">
+                {% if matriculas %}
+                <button type="submit" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700">
+                    Salvar notas
+                </button>
+
+                {% endif %}
+
+                <a href="{{ url_for('notas.listar') }}" class="bg-gray-200 px-6 py-3 rounded-lg hover:bg-gray-300">
+                    Voltar
+                </a>
+            </div>
+        </form>
         </div>
-        {% import "_botao_tema.html" as tema %}
-        {{ tema.flutuante() }}
-    </body>
-</html>
+    </div>
+</div>
+{% endblock %}

@@ -1,5 +1,6 @@
 from app import db
 
+
 class Matricula(db.Model):
     __tablename__ = "matriculas"
 

@@ -1,11 +1,10 @@
 from datetime import date
 
-from flask import Blueprint, current_app, flash, redirect, render_template, request, url_for
-from sqlalchemy.exc import SQLAlchemyError
+from flask import Blueprint, flash, redirect, render_template, request, url_for
 
-from app import db
 from app.acesso import perfil_required
-from app.services import RegraNegocioError, matricula_service, nota_service, turma_service
+from app.routes.acoes import executar
+from app.services import matricula_service, nota_service, turma_service
 
 notas = Blueprint("notas", __name__, url_prefix="/instrutor/notas")
 
@@ -81,17 +80,9 @@ def registrar(turma_id):
             flash("Esta turma não possui alunos com matrícula ativa.")
             return tela()
 
-        try:
-            nota_service.registrar_notas(notas_validas)
-        except RegraNegocioError as e:
-            db.session.rollback()
-            flash(str(e))
-            return tela()
-        except SQLAlchemyError:
-            db.session.rollback()
-            current_app.logger.exception("Erro ao registrar notas")
-            flash("Erro ao registrar notas.")
-            return tela()
+        falha = executar(lambda: nota_service.registrar_notas(notas_validas), "Erro ao registrar notas.", tela)
+        if falha:
+            return falha
 
         flash("Notas registradas com sucesso!")
         return redirect(url_for("notas.listar"))

@@ -1,13 +1,12 @@
 from datetime import date
 
-from flask import Blueprint, current_app, flash, redirect, render_template, request, url_for
-from sqlalchemy.exc import SQLAlchemyError
+from flask import Blueprint, flash, redirect, render_template, request, url_for
 
-from app import db
 from app.acesso import perfil_required
+from app.routes.acoes import executar
 from app.routes.filtros import ler_filtros
-from app.validacao import inteiro_seguro
 from app.services import aluno_service, matricula_service, turma_service
+from app.validacao import inteiro_seguro
 
 matriculas = Blueprint("matriculas", __name__, url_prefix="/secretaria/matriculas")
 
@@ -78,18 +77,18 @@ def cadastrar():
             flash("Este aluno já possui matrícula ativa nesta turma.")
             return tela(aluno, turma.id)
 
-        try:
-            matricula_service.cadastrar_matricula({
+        falha = executar(
+            lambda: matricula_service.cadastrar_matricula({
                 "aluno_id": aluno.id,
                 "turma_id": turma.id,
                 "data_matricula": date.today(),
                 "status": "Ativa"
-            })
-        except SQLAlchemyError:
-            db.session.rollback()
-            current_app.logger.exception("Erro ao realizar matrícula")
-            flash("Erro ao realizar matrícula.")
-            return tela(aluno, turma.id)
+            }),
+            "Erro ao realizar matrícula.",
+            lambda: tela(aluno, turma.id),
+        )
+        if falha:
+            return falha
 
         flash("Matrícula realizada com sucesso!")
         return redirect(url_for("matriculas.listar"))
@@ -102,17 +101,16 @@ def cadastrar():
 def cancelar(id):
     matricula = matricula_service.buscar_matricula(id)
 
+    def voltar():
+        return redirect(url_for("matriculas.listar"))
+
     if matricula.status == "Cancelada":
         flash("Esta matrícula já está cancelada.")
-        return redirect(url_for("matriculas.listar"))
+        return voltar()
 
-    try:
-        matricula_service.cancelar_matricula(matricula)
-    except SQLAlchemyError:
-        db.session.rollback()
-        current_app.logger.exception("Erro ao cancelar matrícula")
-        flash("Erro ao cancelar matrícula.")
-        return redirect(url_for("matriculas.listar"))
+    falha = executar(lambda: matricula_service.cancelar_matricula(matricula), "Erro ao cancelar matrícula.", voltar)
+    if falha:
+        return falha
 
     flash("Matrícula cancelada com sucesso!")
-    return redirect(url_for("matriculas.listar"))
+    return voltar()

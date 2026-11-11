@@ -52,11 +52,12 @@ Cada perfil vê apenas as telas que lhe dizem respeito. O banco de dados é um *
 ## ✨ Funcionalidades
 
 ### 🗂️ Secretaria
-- **Alunos:** cadastro, edição e exclusão, com validação de e-mail e CPF únicos.
+- **Alunos:** cadastro, edição e exclusão, com CPF validado (dígitos verificadores) e e-mail e CPF únicos. Busca por nome, CPF ou e-mail.
 - **Cursos:** carga horária, modalidade (Presencial, EAD ou Híbrido) e status (Ativo ou Inativo).
-- **Turmas:** vinculadas a um curso ativo, com ano, turno e status.
-- **Matrículas:** vínculo aluno ↔ turma, com bloqueio de matrícula ativa duplicada e opção de cancelamento.
-- **Integridade:** não é possível excluir curso com turmas, turma com matrículas nem aluno com matrículas; o sistema explica o motivo.
+- **Turmas:** vinculadas a um curso ativo, com ano, turno e status; não permite turma repetida no mesmo curso e ano.
+- **Matrículas:** vínculo aluno ↔ turma, com o aluno escolhido por busca (nome ou CPF). As canceladas ficam numa aba à parte.
+- **Notas e frequência:** consulta com busca, filtros de ano e turma e resumo (média, presenças, faltas e %).
+- **Integridade:** não é possível excluir curso com turmas, turma com matrículas nem aluno com matrícula ativa; o sistema explica o motivo.
 
 ### 👩‍🏫 Instrutor
 - **Frequência:** registro de presença ou falta por aluno e por dia. Um novo envio no mesmo dia atualiza o registro em vez de duplicar.
@@ -65,7 +66,12 @@ Cada perfil vê apenas as telas que lhe dizem respeito. O banco de dados é um *
 
 ### 📊 Coordenação
 - **Painel** com total de alunos, matrículas ativas, notas e registros de frequência.
-- **Consultas** de alunos (com número de matrículas ativas), matrículas, desempenho e frequência.
+- **Consultas** de alunos (com número de matrículas ativas), matrículas (com filtro de status), desempenho e frequência, todas com busca e 20 itens por página.
+- **Usuários:** cadastra logins de qualquer perfil, redefine senhas e remove acessos (quem é removido perde o acesso na hora).
+
+### 🌗 Para todos
+- **Modo claro e escuro**, com a escolha salva no navegador.
+- **Minha senha:** cada pessoa troca a própria senha pelo cabeçalho.
 
 ---
 
@@ -92,9 +98,11 @@ Cada perfil vê apenas as telas que lhe dizem respeito. O banco de dados é um *
 | ORM | [SQLAlchemy 2.1](https://www.sqlalchemy.org/) + [Flask-SQLAlchemy 3.1](https://flask-sqlalchemy.readthedocs.io/) |
 | Banco de dados | [PostgreSQL](https://www.postgresql.org/) hospedado no [Neon](https://neon.tech) |
 | Driver | [psycopg 3](https://www.psycopg.org/psycopg3/) |
+| Migrações do banco | [Flask-Migrate](https://flask-migrate.readthedocs.io/) (Alembic) |
 | Segurança | [Flask-WTF](https://flask-wtf.readthedocs.io/) (CSRF) e Werkzeug (hash de senhas) |
 | Templates | [Jinja2](https://jinja.palletsprojects.com/) |
-| Estilo | [Tailwind CSS](https://tailwindcss.com/) (via CDN) |
+| Estilo | [Tailwind CSS 3](https://tailwindcss.com/), gerado localmente em `frontend/static/css/tailwind.css` |
+| Testes | [pytest](https://pytest.org/) |
 | Configuração | [python-dotenv](https://pypi.org/project/python-dotenv/) |
 
 ---
@@ -180,22 +188,28 @@ erDiagram
 EduCore/
 ├── backend/
 │   ├── app/
-│   │   ├── __init__.py          # create_app(): Flask, SQLAlchemy, CSRF e blueprints
-│   │   ├── acesso.py            # decorator @perfil_required
+│   │   ├── __init__.py          # create_app(): Flask, SQLAlchemy, CSRF, migrações e blueprints
+│   │   ├── acesso.py            # decorators @perfil_required e @login_required
+│   │   ├── validacao.py         # CPF, e-mail, datas, tamanhos e números da URL
 │   │   ├── models/              # Aluno, Curso, Turma, Matricula, Nota, Frequencia, Usuario
-│   │   ├── services/            # regras de negócio (uma por entidade)
-│   │   └── routes/              # blueprints: auth, secretaria, instrutor, coordenacao...
+│   │   ├── services/            # regras de negócio (uma por entidade) e busca/paginação
+│   │   └── routes/              # blueprints; acoes.py padroniza o tratamento de erros
 │   ├── database/
-│   │   ├── database.py          # criação das tabelas e dos usuários iniciais
+│   │   ├── database.py          # confere as tabelas e cria os usuários iniciais
 │   │   └── educore_postgres.sql # schema de referência em SQL
+│   ├── migrations/              # migrações do banco (Flask-Migrate / Alembic)
+│   ├── tests/                   # testes automatizados (pytest)
 │   ├── config.py                # lê o .env e configura o banco
 │   ├── run.py                   # ponto de entrada da aplicação
-│   ├── requirements.txt
+│   ├── requirements.txt         # dependências do sistema
+│   ├── requirements-dev.txt     # + ferramentas de teste
 │   └── .env.example             # modelo das variáveis de ambiente
 ├── frontend/
-│   ├── templates/               # páginas Jinja2 por perfil
-│   └── static/                  # CSS e JS
-├── docs/img/                    # imagens deste README
+│   ├── templates/               # base.html + páginas Jinja2 por perfil
+│   └── static/css/              # tailwind.css (gerado) e tema-escuro.css
+├── package.json                 # só para gerar o CSS do Tailwind
+├── tailwind.config.js
+├── docs/                        # imagens do README e pendências técnicas
 └── relatorio.md                 # relatório técnico de análise e correções
 ```
 
@@ -307,14 +321,28 @@ FLASK_DEBUG=1
 3. Marque **Connection pooling** e copie a connection string.
 4. Cole a string em `DATABASE_URL` no `backend/.env`.
 
-### Criação das tabelas
+### Criação das tabelas (migrações)
 
-Não é preciso rodar nenhum script SQL. Na primeira execução, o EduCore:
+As tabelas são criadas e alteradas pelas **migrações** do Flask-Migrate, que ficam em `backend/migrations/`. Num banco novo, rode uma vez, **dentro da pasta `backend`**:
 
-1. cria as 7 tabelas (`alunos`, `cursos`, `turmas`, `matriculas`, `notas`, `frequencias` e `usuarios`);
-2. cria os 3 usuários iniciais, se a tabela `usuarios` estiver vazia.
+```bash
+flask --app run db upgrade
+```
 
-O arquivo [`backend/database/educore_postgres.sql`](backend/database/educore_postgres.sql) contém o mesmo schema em SQL, para consulta ou criação manual pelo *SQL Editor* do Neon.
+Isso cria as 7 tabelas (`alunos`, `cursos`, `turmas`, `matriculas`, `notas`, `frequencias` e `usuarios`). Na primeira execução do sistema, os 3 usuários iniciais são criados se a tabela `usuarios` estiver vazia. Se você esquecer o `upgrade`, o sistema avisa ao iniciar.
+
+> O banco do Neon do projeto já está na versão atual das migrações.
+
+**Quando mudar um model** (nova coluna, nova tabela...), crie a migração e aplique:
+
+```bash
+flask --app run db migrate -m "descreva a mudança"   # gera o arquivo em migrations/versions
+flask --app run db upgrade                           # aplica no banco do .env
+```
+
+Confira o arquivo gerado antes de aplicar e envie-o junto com o commit. O teste `tests/test_migracoes.py` falha se algum model mudar sem migração.
+
+O arquivo [`backend/database/educore_postgres.sql`](backend/database/educore_postgres.sql) contém o schema em SQL, apenas para consulta.
 
 > ℹ️ O plano gratuito do Neon suspende o banco após alguns minutos sem uso. A primeira requisição depois disso pode levar alguns segundos a mais; a aplicação já trata a reconexão automaticamente (`pool_pre_ping`).
 
@@ -337,6 +365,29 @@ Banco de dados EduCore inicializado com sucesso!
 
 Abra **http://127.0.0.1:5000** no navegador. 🎉
 
+### CSS (Tailwind)
+
+O CSS já vem pronto em `frontend/static/css/tailwind.css`, então **para só rodar o sistema não é preciso Node.js**. Se você usar classes do Tailwind que ainda não existiam num template, gere o CSS de novo (precisa do [Node.js](https://nodejs.org/) 18+):
+
+```bash
+npm install          # uma vez
+npm run css          # gera o tailwind.css
+npm run css:watch    # ou: fica gerando enquanto você edita
+```
+
+O modo escuro fica em `frontend/static/css/tema-escuro.css`: ele troca as cores claras pelas escuras. Se usar uma cor nova, acrescente a versão escura lá.
+
+---
+
+## 🧪 Testes
+
+Os testes usam um banco SQLite temporário (nunca tocam no Neon). Na pasta `backend`:
+
+```bash
+pip install -r requirements-dev.txt   # uma vez
+python -m pytest
+```
+
 ---
 
 ## 🔑 Acessos de desenvolvimento
@@ -347,7 +398,7 @@ Abra **http://127.0.0.1:5000** no navegador. 🎉
 | 👩‍🏫 Instrutor | `instrutor@educore.com` | `123456` |
 | 📊 Coordenação | `coordenacao@educore.com` | `234567` |
 
-> ⚠️ Essas senhas valem apenas quando as variáveis `SENHA_*` não estão definidas no `.env`. **Antes de qualquer uso real, defina senhas fortes.** Elas só são aplicadas quando a tabela `usuarios` ainda está vazia; depois disso, as senhas precisam ser trocadas no próprio banco.
+> ⚠️ Essas senhas valem apenas quando as variáveis `SENHA_*` não estão definidas no `.env`, e só quando a tabela `usuarios` ainda está vazia. **Antes de qualquer uso real, troque-as:** cada pessoa pode usar **Minha senha** no cabeçalho, e a coordenação pode redefinir qualquer senha em **Usuários**. Senhas novas precisam ter pelo menos 8 caracteres.
 
 ### Roteiro rápido de teste
 
@@ -361,7 +412,7 @@ Abra **http://127.0.0.1:5000** no navegador. 🎉
 
 - 🔒 **Senhas com hash** (`scrypt`, via Werkzeug); nenhuma senha é guardada em texto puro.
 - 🧾 **Proteção CSRF** em todos os formulários (Flask-WTF).
-- 👥 **Controle de acesso por perfil** com o decorator `@perfil_required`.
+- 👥 **Controle de acesso por perfil** com o decorator `@perfil_required`; um usuário removido perde o acesso na próxima página que abrir.
 - 🗝️ **Segredos fora do código:** `SECRET_KEY` e a URL do banco ficam apenas no `.env`.
 - 🔐 **Conexão criptografada** com o banco (`sslmode=require`).
 
@@ -377,6 +428,8 @@ Abra **http://127.0.0.1:5000** no navegador. 🎉
 | "Sua sessão expirou ou o formulário é inválido" | O token CSRF expirou ou a `SECRET_KEY` mudou | Recarregue a página e envie de novo. |
 | Primeira página demora a abrir | O banco do Neon estava suspenso | Normal no plano gratuito; as próximas requisições ficam rápidas. |
 | `Address already in use` (porta 5000) | Outra instância do app está rodando | Feche o outro terminal ou finalize o processo `python`. |
+| "O banco ainda não tem as tabelas do EduCore" | Banco novo, sem migrações aplicadas | Na pasta `backend`, rode `flask --app run db upgrade`. |
+| A página aparece sem estilo | O `tailwind.css` não foi gerado ou foi apagado | Rode `npm install` e `npm run css`. |
 
 ---
 
@@ -385,11 +438,12 @@ Abra **http://127.0.0.1:5000** no navegador. 🎉
 - [x] Migração do MySQL local para PostgreSQL na nuvem (Neon)
 - [x] Autenticação com hash de senha e proteção CSRF
 - [x] Regras de integridade (duplicidades e exclusões com vínculo)
-- [ ] Migrações de schema versionadas com Flask-Migrate (Alembic)
-- [ ] Tela para cadastrar usuários e trocar senhas
-- [ ] Padronizar todos os templates a partir do `base.html`
-- [ ] Gerar o CSS do Tailwind localmente, sem depender do CDN
-- [ ] Testes automatizados com `pytest`
+- [x] Migrações de schema versionadas com Flask-Migrate (Alembic)
+- [x] Tela para cadastrar usuários e trocar senhas
+- [x] Padronizar todos os templates a partir do `base.html`
+- [x] Gerar o CSS do Tailwind localmente, sem depender do CDN
+- [x] Testes automatizados com `pytest`
+- [x] Busca e paginação nas listagens; modo claro e escuro
 
 O histórico detalhado de análise e correções está em [`relatorio.md`](relatorio.md).
 

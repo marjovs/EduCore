@@ -3,6 +3,14 @@
 **Data:** 06/11/2026
 **Escopo:** varredura completa de `backend/` (Python/Flask) e `frontend/` (templates Jinja), análise de erros e viabilidade de migração para **Neon** (PostgreSQL em nuvem).
 
+> ### ✅ Atualização — padronização e pendências do roadmap (10/11/2026)
+> - Todas as páginas estendem o `base.html`; mensagens num `_mensagens.html`; telas de notas e frequência compartilhadas entre secretaria e coordenação; tratamento de erro das rotas centralizado em `app/routes/acoes.py`.
+> - **Flask-Migrate** configurado (`backend/migrations/`); o Neon foi marcado (`stamp`) na versão inicial depois de confirmar que suas tabelas eram idênticas aos models. O sistema não usa mais `create_all()` ao iniciar.
+> - **Usuários:** a coordenação cadastra, redefine senhas e exclui; todos podem trocar a própria senha. Usuário excluído perde o acesso imediatamente.
+> - **Tailwind gerado localmente** (`npm run css`), sem CDN; CSS de ~17 KB.
+> - **79 testes com `pytest`** em `backend/tests/`, incluindo um que garante que as migrações batem com os models.
+> - Busca, paginação, modo escuro e validações (CPF, e-mail, tamanhos, números na URL) das etapas anteriores estão descritos no README. Pendências restantes: `docs/pendencias-tecnicas.md`.
+
 > ### ✅ Atualização — erros críticos corrigidos (06/11/2026)
 > Os itens **2.1 a 2.4** já foram corrigidos:
 > - Templates renomeados: `secretaria/aluno/` → `secretaria/alunos/`, `notas/resgistrar.html` → `notas/registrar.html`, `coordenacao/aluno.html` → `coordenacao/alunos.html`, `coordenacao/matricula.html` → `coordenacao/matriculas.html`; em `frequencia_routes.py` o caminho passou a ser `instrutor/frequencias/`.

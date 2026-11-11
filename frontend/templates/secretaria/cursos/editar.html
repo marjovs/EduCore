@@ -23,7 +23,7 @@
                     Nome do curso *
                 </label>
 
-                <input type="text" name="nome" required maxlength="120" value="{{ curso.nome }}" class="w-full border rounded-lg p-3">
+                <input type="text" name="nome" required maxlength="120" value="{{ valor_form('nome', curso.nome) }}" class="w-full border rounded-lg p-3">
             </div>
 
             <div>
@@ -31,9 +31,7 @@
                     Descrição
                 </label>
 
-                <textarea name="descricao" rows="3" class="w-full border rounded-lg p-3">
-                    {{ curso.descricao or '' }}
-                </textarea>
+                <textarea name="descricao" rows="3" class="w-full border rounded-lg p-3">{{ valor_form('descricao', curso.descricao or '') }}</textarea>
             </div>
 
             <div>
@@ -41,7 +39,7 @@
                     Carga horária (horas) *
                 </label>
 
-                <input type="number" name="carga_horaria" min="1" max="20000" required value="{{ curso.carga_horaria }}" class="w-full border rounded-lg p-3">
+                <input type="number" name="carga_horaria" min="1" max="20000" required value="{{ valor_form('carga_horaria', curso.carga_horaria) }}" class="w-full border rounded-lg p-3">
             </div>
 
             <div>
@@ -50,13 +48,13 @@
                 </label>
 
                 <select name="modalidade" required class="w-full border rounded-lg p-3">
-                    <option value="Presencial" {% if curso.modalidade == 'Presencial' %}selected{% endif %}>
+                    <option value="Presencial" {% if valor_form('modalidade', curso.modalidade) == 'Presencial' %}selected{% endif %}>
                         Presencial
                     </option>
-                    <option value="EAD" {% if curso.modalidade == 'EAD' %}selected{% endif %}>
+                    <option value="EAD" {% if valor_form('modalidade', curso.modalidade) == 'EAD' %}selected{% endif %}>
                         EAD
                     </option>
-                    <option value="Híbrido" {% if curso.modalidade == 'Híbrido' %}selected{% endif %}>
+                    <option value="Híbrido" {% if valor_form('modalidade', curso.modalidade) == 'Híbrido' %}selected{% endif %}>
                         Híbrido
                     </option>
                 </select>
@@ -67,10 +65,10 @@
                     Status
                 </label>
                 <select name="status" class="w-full border rounded-lg p-3">
-                    <option value="Ativo" {% if curso.status == 'Ativo' %}selected{% endif %}>
+                    <option value="Ativo" {% if valor_form('status', curso.status) == 'Ativo' %}selected{% endif %}>
                         Ativo
                     </option>
-                    <option value="Inativo" {% if curso.status == 'Inativo' %}selected{% endif %}>
+                    <option value="Inativo" {% if valor_form('status', curso.status) == 'Inativo' %}selected{% endif %}>
                         Inativo
                     </option>
                 </select>

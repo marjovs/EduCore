@@ -1,9 +1,8 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 
-from app.acesso import PERFIS, login_required
-from app.models.usuario import Usuario
+from app.acesso import PERFIS, login_required, marcar_verificado
 from app.routes.acoes import executar
-from app.services import usuario_service
+from app.services import RegraNegocioError, usuario_service
 
 auth = Blueprint("auth", __name__)
 
@@ -12,21 +11,18 @@ auth = Blueprint("auth", __name__)
 def login():
 
     if request.method == "POST":
+        try:
+            usuario = usuario_service.autenticar(request.form.get("email"), request.form.get("senha"))
+        except RegraNegocioError as erro:
+            flash(str(erro))
+            return render_template("auth/login.html")
 
-        email = request.form.get("email", "").strip().lower()
-        senha = request.form.get("senha", "")
+        session.clear()
+        session["usuario"] = usuario.email
+        session["perfil"] = usuario.perfil
+        marcar_verificado()
 
-        usuario = Usuario.query.filter_by(email=email).first()
-
-        if usuario and usuario.verificar_senha(senha):
-
-            session.clear()
-            session["usuario"] = usuario.email
-            session["perfil"] = usuario.perfil
-
-            return redirect(url_for("auth.dashboard"))
-
-        flash("E-mail ou senha incorretos.", "danger")
+        return redirect(url_for("auth.dashboard"))
 
     return render_template("auth/login.html")
 

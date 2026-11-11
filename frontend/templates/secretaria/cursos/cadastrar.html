@@ -23,7 +23,7 @@
                     Nome do curso *
                 </label>
 
-                <input type="text" name="nome" required maxlength="120" class="w-full border rounded-lg p-3">
+                <input type="text" name="nome" required maxlength="120" value="{{ valor_form('nome') }}" class="w-full border rounded-lg p-3">
             </div>
 
             <div>
@@ -31,7 +31,7 @@
                     Descrição
                 </label>
 
-                <textarea name="descricao" rows="3" class="w-full border rounded-lg p-3"></textarea>
+                <textarea name="descricao" rows="3" class="w-full border rounded-lg p-3">{{ valor_form('descricao') }}</textarea>
             </div>
 
             <div>
@@ -39,7 +39,7 @@
                     Carga horária (horas) *
                 </label>
 
-                <input type="number" name="carga_horaria" min="1" max="20000" required class="w-full border rounded-lg p-3">
+                <input type="number" name="carga_horaria" min="1" max="20000" required value="{{ valor_form('carga_horaria') }}" class="w-full border rounded-lg p-3">
             </div>
 
             <div>
@@ -51,13 +51,13 @@
                     <option value="">
                         Selecione
                     </option>
-                    <option value="Presencial">
+                    <option value="Presencial" {{ 'selected' if valor_form('modalidade') == 'Presencial' }}>
                         Presencial
                     </option>
-                    <option value="EAD">
+                    <option value="EAD" {{ 'selected' if valor_form('modalidade') == 'EAD' }}>
                         EAD
                     </option>
-                    <option value="Híbrido">
+                    <option value="Híbrido" {{ 'selected' if valor_form('modalidade') == 'Híbrido' }}>
                         Híbrido
                     </option>
                 </select>
@@ -72,7 +72,7 @@
                     <option value="Ativo">
                         Ativo
                     </option>
-                    <option value="Inativo">
+                    <option value="Inativo" {{ 'selected' if valor_form('status') == 'Inativo' }}>
                         Inativo
                     </option>
                 </select>

@@ -41,6 +41,9 @@
                             Perfil
                         </th>
                         <th class="p-4">
+                            Situação
+                        </th>
+                        <th class="p-4">
                             Ações
                         </th>
                     </tr>
@@ -48,10 +51,11 @@
 
                 <tbody>
                     {% for usuario in usuarios %}
+                    {% set proprio = usuario.email == session.get('usuario') %}
                     <tr class="border-t hover:bg-gray-50">
-                        <td class="p-4">
+                        <td class="p-4 {{ 'text-gray-400' if not usuario.ativo }}">
                             {{ usuario.email }}
-                            {% if usuario.email == session.get('usuario') %}
+                            {% if proprio %}
                             <span class="ml-2 text-xs bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full">você</span>
                             {% endif %}
                         </td>
@@ -59,15 +63,34 @@
                             {{ nomes_perfis[usuario.perfil] }}
                         </td>
                         <td class="p-4">
-                            <div class="flex gap-2 items-start">
+                            {% if not usuario.ativo %}
+                            <span class="bg-gray-200 text-gray-700 px-3 py-1 rounded-full text-sm">Desativado</span>
+                            {% elif esta_bloqueado(usuario) %}
+                            <span class="bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm"
+                                title="Muitas tentativas com senha errada. Redefina a senha para liberar agora.">Bloqueado</span>
+                            {% else %}
+                            <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm">Ativo</span>
+                            {% endif %}
+                        </td>
+                        <td class="p-4">
+                            <div class="flex flex-wrap gap-2 items-start">
                                 <a href="{{ url_for('usuarios.redefinir_senha', id=usuario.id) }}"
                                     class="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium text-purple-700 bg-purple-100 hover:bg-purple-50 border border-gray-300">
                                     Redefinir senha
                                 </a>
 
-                                {% if usuario.email != session.get('usuario') %}
-                                {{ acoes.confirmar(url_for('usuarios.excluir', id=usuario.id), "Excluir",
-                                    "Excluir o usuário " ~ usuario.email ~ "? Ele não conseguirá mais entrar no sistema.") }}
+                                {% if usuario.ativo and not proprio %}
+                                {{ acoes.confirmar(url_for('usuarios.desativar', id=usuario.id), "Desativar",
+                                    "Desativar " ~ usuario.email ~ "? A pessoa não conseguirá mais entrar até ser reativada.",
+                                    icone="cancelar") }}
+                                {% elif not usuario.ativo %}
+                                <form method="POST" action="{{ url_for('usuarios.reativar', id=usuario.id) }}">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit"
+                                        class="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium text-green-700 bg-green-100 hover:bg-green-50 border border-gray-300">
+                                        Reativar
+                                    </button>
+                                </form>
                                 {% endif %}
                             </div>
                         </td>
@@ -76,6 +99,10 @@
                 </tbody>
             </table>
         </div>
+
+        <p class="text-sm text-gray-500 mt-4">
+            Após 5 senhas erradas seguidas, o usuário fica bloqueado por 15 minutos. Redefinir a senha libera na hora.
+        </p>
     </div>
 </div>
 {% endblock %}

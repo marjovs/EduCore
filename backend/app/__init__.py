@@ -32,6 +32,16 @@ def create_app():
     from app.validacao import formatar_cpf
     app.add_template_filter(formatar_cpf, "cpf")
 
+    @app.template_global()
+    def valor_form(campo, padrao=""):
+        """Valor de um campo do formulário: o que foi enviado (quando a página
+        volta com erro) ou o valor padrão. Assim ninguém precisa redigitar tudo.
+            <input name="nome" value="{{ valor_form('nome', aluno.nome) }}">
+        """
+        if request.method == "POST" and campo in request.form:
+            return request.form[campo]
+        return "" if padrao is None else padrao
+
     @app.errorhandler(CSRFError)
     def csrf_invalido(erro):
         flash("Sua sessão expirou ou o formulário é inválido. Tente novamente.")

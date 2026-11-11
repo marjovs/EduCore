@@ -1,5 +1,8 @@
+from datetime import timedelta
+
 from app import db
 from app.models.usuario import Usuario
+from app.services import usuario_service
 from tests.conftest import SENHAS
 
 
@@ -10,12 +13,27 @@ def novo(coordenacao, **campos):
     return coordenacao.post("/coordenacao/usuarios/cadastrar", data=dados, follow_redirects=True).get_data(as_text=True)
 
 
-def test_coordenacao_cadastra_usuario_que_consegue_entrar(app, coordenacao, cliente):
+def entrar(cliente, email, senha):
+    return cliente.post("/", data={"email": email, "senha": senha})
+
+
+def id_do(app, perfil):
+    with app.app_context():
+        return Usuario.query.filter_by(perfil=perfil).one().id
+
+
+def expirar_verificacao(cliente):
+    """Simula que já passou o intervalo de conferência do acesso."""
+    with cliente.session_transaction() as sessao:
+        sessao["verificado_em"] = 0
+
+
+# ---- Cadastro e senhas -------------------------------------------------------
+
+def test_coordenacao_cadastra_usuario_que_consegue_entrar(coordenacao, cliente):
     html = novo(coordenacao)
     assert "Usuário cadastrado com sucesso!" in html and "nova@educore.com" in html
-
-    r = cliente.post("/", data={"email": "nova@educore.com", "senha": "senha-forte-1"})
-    assert r.headers["Location"].endswith("/dashboard")
+    assert entrar(cliente, "nova@educore.com", "senha-forte-1").headers["Location"].endswith("/dashboard")
 
 
 def test_validacoes_do_cadastro(coordenacao):
@@ -32,65 +50,11 @@ def test_cadastro_com_erro_mantem_email_e_perfil(coordenacao):
 
 
 def test_redefinir_senha(app, coordenacao, cliente):
-    with app.app_context():
-        usuario_id = Usuario.query.filter_by(perfil="instrutor").one().id
-
-    html = coordenacao.post(f"/coordenacao/usuarios/senha/{usuario_id}",
+    html = coordenacao.post(f"/coordenacao/usuarios/senha/{id_do(app, 'instrutor')}",
                             data={"senha": "nova-senha-123", "confirmacao": "nova-senha-123"},
                             follow_redirects=True).get_data(as_text=True)
     assert "redefinida com sucesso" in html
-
-    r = cliente.post("/", data={"email": "instrutor@educore.com", "senha": "nova-senha-123"})
-    assert r.headers["Location"].endswith("/dashboard")
-
-
-def test_excluir_usuario_encerra_o_acesso(app, coordenacao, instrutor):
-    assert instrutor.get("/instrutor/painel").status_code == 200
-
-    with app.app_context():
-        usuario_id = Usuario.query.filter_by(perfil="instrutor").one().id
-    html = coordenacao.post(f"/coordenacao/usuarios/excluir/{usuario_id}", follow_redirects=True).get_data(as_text=True)
-    assert "Usuário excluído com sucesso!" in html
-
-    r = instrutor.get("/instrutor/painel")
-    assert r.status_code == 302 and r.headers["Location"].endswith("/")
-
-
-def test_nao_exclui_a_si_mesmo_nem_a_ultima_coordenacao(app, coordenacao):
-    with app.app_context():
-        proprio = Usuario.query.filter_by(perfil="coordenacao").one().id
-    html = coordenacao.post(f"/coordenacao/usuarios/excluir/{proprio}", follow_redirects=True).get_data(as_text=True)
-    assert "seu próprio usuário" in html
-
-    # outra coordenação tenta excluir a única coordenação restante
-    novo(coordenacao, email="coord2@educore.com", perfil="coordenacao")
-    with app.app_context():
-        db.session.delete(db.session.get(Usuario, proprio))
-        db.session.commit()
-        unica = Usuario.query.filter_by(perfil="coordenacao").one()
-        unica_id = unica.id
-    c2 = coordenacao.application.test_client()
-    with c2.session_transaction() as s:
-        s["usuario"], s["perfil"] = "outra@educore.com", "coordenacao"
-    with app.app_context():
-        db.session.add(Usuario(email="outra@educore.com", perfil="secretaria", senha_hash="x"))
-        db.session.commit()
-    # sessão com perfil diferente do banco é encerrada
-    assert c2.post(f"/coordenacao/usuarios/excluir/{unica_id}").status_code == 302
-    with app.app_context():
-        assert db.session.get(Usuario, unica_id) is not None
-
-
-def test_ultima_coordenacao_nao_pode_ser_excluida(app):
-    from app.services import RegraNegocioError, usuario_service
-
-    with app.app_context():
-        unica = Usuario.query.filter_by(perfil="coordenacao").one()
-        try:
-            usuario_service.excluir_usuario(unica, "outra@educore.com")
-            assert False, "deveria recusar"
-        except RegraNegocioError as erro:
-            assert "pelo menos um usuário da coordenação" in str(erro)
+    assert entrar(cliente, "instrutor@educore.com", "nova-senha-123").headers["Location"].endswith("/dashboard")
 
 
 def test_minha_senha(secretaria, cliente):
@@ -101,10 +65,132 @@ def test_minha_senha(secretaria, cliente):
     r = secretaria.post("/minha-senha", data={"senha_atual": SENHAS["secretaria"], "senha": "nova-senha-1",
                                               "confirmacao": "nova-senha-1"}, follow_redirects=True)
     assert "Senha alterada com sucesso!" in r.get_data(as_text=True)
-
-    r = cliente.post("/", data={"email": "secretaria@educore.com", "senha": "nova-senha-1"})
-    assert r.headers["Location"].endswith("/dashboard")
+    assert entrar(cliente, "secretaria@educore.com", "nova-senha-1").headers["Location"].endswith("/dashboard")
 
 
 def test_minha_senha_exige_login(cliente):
     assert cliente.get("/minha-senha").status_code == 302
+
+
+# ---- Desativar e reativar ----------------------------------------------------
+
+def test_desativar_impede_login_e_encerra_o_acesso(app, coordenacao, instrutor, cliente):
+    assert instrutor.get("/instrutor/painel").status_code == 200
+
+    instrutor_id = id_do(app, "instrutor")
+    html = coordenacao.post(f"/coordenacao/usuarios/desativar/{instrutor_id}",
+                            follow_redirects=True).get_data(as_text=True)
+    assert "desativado com sucesso" in html and "Desativado" in html
+
+    # Quem estava logado perde o acesso na próxima conferência (até 1 minuto)
+    expirar_verificacao(instrutor)
+    r = instrutor.get("/instrutor/painel")
+    assert r.status_code == 302 and r.headers["Location"].endswith("/")
+
+    html = entrar(cliente, "instrutor@educore.com", SENHAS["instrutor"]).get_data(as_text=True)
+    assert "Este usuário está desativado" in html
+
+    html = coordenacao.post(f"/coordenacao/usuarios/reativar/{instrutor_id}",
+                            follow_redirects=True).get_data(as_text=True)
+    assert "reativado com sucesso" in html
+    assert entrar(cliente, "instrutor@educore.com", SENHAS["instrutor"]).headers["Location"].endswith("/dashboard")
+
+
+def test_nao_desativa_a_si_mesmo(app, coordenacao):
+    html = coordenacao.post(f"/coordenacao/usuarios/desativar/{id_do(app, 'coordenacao')}",
+                            follow_redirects=True).get_data(as_text=True)
+    assert "seu próprio usuário" in html
+
+
+def test_nao_desativa_a_ultima_coordenacao_ativa(app):
+    from app.services import RegraNegocioError
+
+    with app.app_context():
+        unica = Usuario.query.filter_by(perfil="coordenacao").one()
+        try:
+            usuario_service.desativar_usuario(unica, "outra@educore.com")
+            assert False, "deveria recusar"
+        except RegraNegocioError as erro:
+            assert "pelo menos um usuário ativo da coordenação" in str(erro)
+
+
+# ---- Conferência de acesso ---------------------------------------------------
+
+def test_acesso_e_conferido_no_maximo_uma_vez_por_minuto(app, instrutor):
+    from sqlalchemy import event
+
+    assert instrutor.get("/instrutor/painel").status_code == 200  # confere e marca
+
+    consultas = []
+    with app.app_context():
+        def contar(conn, cursor, sql, *args):
+            if "FROM usuarios" in sql:
+                consultas.append(sql)
+        event.listen(db.engine, "before_cursor_execute", contar)
+        try:
+            for _ in range(3):
+                assert instrutor.get("/instrutor/notas/").status_code == 200
+            assert consultas == []  # dentro do intervalo, nenhuma consulta extra
+
+            expirar_verificacao(instrutor)
+            assert instrutor.get("/instrutor/notas/").status_code == 200
+            assert len(consultas) == 1
+        finally:
+            event.remove(db.engine, "before_cursor_execute", contar)
+
+
+def test_perfil_alterado_no_banco_encerra_a_sessao(app, instrutor):
+    with app.app_context():
+        Usuario.query.filter_by(perfil="instrutor").one().perfil = "secretaria"
+        db.session.commit()
+    expirar_verificacao(instrutor)
+    assert instrutor.get("/instrutor/painel").status_code == 302
+
+
+# ---- Limite de tentativas ----------------------------------------------------
+
+def test_bloqueia_apos_5_senhas_erradas(app, cliente):
+    for _ in range(4):
+        assert "E-mail ou senha incorretos." in entrar(cliente, "secretaria@educore.com", "x").get_data(as_text=True)
+
+    html = entrar(cliente, "secretaria@educore.com", "x").get_data(as_text=True)  # 5ª: bloqueia
+    assert "E-mail ou senha incorretos." in html
+
+    html = entrar(cliente, "secretaria@educore.com", SENHAS["secretaria"]).get_data(as_text=True)
+    assert "Muitas tentativas" in html and "15 minuto" in html  # nem a senha certa entra
+
+
+def test_senha_certa_zera_as_tentativas(app, cliente):
+    for _ in range(4):
+        entrar(cliente, "secretaria@educore.com", "x")
+    assert entrar(cliente, "secretaria@educore.com", SENHAS["secretaria"]).status_code == 302
+    with app.app_context():
+        assert Usuario.query.filter_by(perfil="secretaria").one().tentativas_falhas == 0
+    for _ in range(4):
+        entrar(cliente, "secretaria@educore.com", "x")
+    assert entrar(cliente, "secretaria@educore.com", SENHAS["secretaria"]).status_code == 302
+
+
+def test_bloqueio_expira_e_redefinir_senha_libera(app, coordenacao, cliente):
+    for _ in range(5):
+        entrar(cliente, "instrutor@educore.com", "x")
+
+    html = coordenacao.get("/coordenacao/usuarios/").get_data(as_text=True)
+    assert "Bloqueado" in html
+
+    with app.app_context():  # simula que os 15 minutos passaram
+        usuario = Usuario.query.filter_by(perfil="instrutor").one()
+        usuario.bloqueado_ate -= timedelta(minutes=16)
+        db.session.commit()
+    assert entrar(cliente, "instrutor@educore.com", SENHAS["instrutor"]).status_code == 302
+
+    for _ in range(5):
+        entrar(cliente, "instrutor@educore.com", "x")
+    coordenacao.post(f"/coordenacao/usuarios/senha/{id_do(app, 'instrutor')}",
+                     data={"senha": "nova-senha-123", "confirmacao": "nova-senha-123"})
+    assert entrar(cliente, "instrutor@educore.com", "nova-senha-123").status_code == 302
+
+
+def test_email_inexistente_responde_igual(cliente):
+    html = entrar(cliente, "ninguem@educore.com", "x").get_data(as_text=True)
+    assert "E-mail ou senha incorretos." in html

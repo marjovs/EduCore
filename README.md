@@ -67,7 +67,7 @@ Cada perfil vê apenas as telas que lhe dizem respeito. O banco de dados é um *
 ### 📊 Coordenação
 - **Painel** com total de alunos, matrículas ativas, notas e registros de frequência.
 - **Consultas** de alunos (com número de matrículas ativas), matrículas (com filtro de status), desempenho e frequência, todas com busca e 20 itens por página.
-- **Usuários:** cadastra logins de qualquer perfil, redefine senhas e remove acessos (quem é removido perde o acesso na hora).
+- **Usuários:** cadastra logins de qualquer perfil, redefine senhas, desativa e reativa (quem é desativado perde o acesso em até 1 minuto).
 
 ### 🌗 Para todos
 - **Modo claro e escuro**, com a escolha salva no navegador.
@@ -331,7 +331,7 @@ flask --app run db upgrade
 
 Isso cria as 7 tabelas (`alunos`, `cursos`, `turmas`, `matriculas`, `notas`, `frequencias` e `usuarios`). Na primeira execução do sistema, os 3 usuários iniciais são criados se a tabela `usuarios` estiver vazia. Se você esquecer o `upgrade`, o sistema avisa ao iniciar.
 
-> O banco do Neon do projeto já está na versão atual das migrações.
+> O banco do Neon do projeto já está na versão atual das migrações. Depois de um `git pull` que traga uma migração nova, rode `flask --app run db upgrade` (na pasta `backend`) para atualizar o banco.
 
 **Quando mudar um model** (nova coluna, nova tabela...), crie a migração e aplique:
 
@@ -412,7 +412,8 @@ python -m pytest
 
 - 🔒 **Senhas com hash** (`scrypt`, via Werkzeug); nenhuma senha é guardada em texto puro.
 - 🧾 **Proteção CSRF** em todos os formulários (Flask-WTF).
-- 👥 **Controle de acesso por perfil** com o decorator `@perfil_required`; um usuário removido perde o acesso na próxima página que abrir.
+- 👥 **Controle de acesso por perfil** com o decorator `@perfil_required`; um usuário desativado perde o acesso em até 1 minuto.
+- 🚫 **Limite de tentativas:** após 5 senhas erradas seguidas, a conta fica bloqueada por 15 minutos (a coordenação libera redefinindo a senha).
 - 🗝️ **Segredos fora do código:** `SECRET_KEY` e a URL do banco ficam apenas no `.env`.
 - 🔐 **Conexão criptografada** com o banco (`sslmode=require`).
 

@@ -17,9 +17,13 @@
 | Testes com `pytest` | `backend/tests/` (79 testes, SQLite temporário): `cd backend && python -m pytest`. |
 | README e relatório | Atualizados. |
 
-## Ainda em aberto (não atrapalham o uso)
+| Formulários perdiam o que foi digitado | Aluno, curso e turma voltam preenchidos quando há erro (`valor_form()` nos templates). |
+| Usuários eram excluídos | Agora são **desativados/reativados** (coluna `ativo`, migração `5dbe7077652b`, já aplicada no Neon). |
+| Consulta ao banco em toda página | O acesso é reconferido no banco no máximo **1 vez por minuto** por pessoa; desativar alguém corta o acesso em até 1 minuto. |
+| Login sem limite de tentativas | Após **5 senhas erradas seguidas**, a conta fica bloqueada por **15 minutos**. Redefinir a senha (coordenação) libera na hora. |
 
-- **Formulários de aluno, curso e turma não mantêm o que foi digitado quando dá erro**: a pessoa precisa preencher de novo. O cadastro de matrícula e o de usuário já mantêm.
-- **Usuários são excluídos, não desativados.** Para desativar sem apagar, seria preciso uma coluna nova (`ativo`) com uma migração no Neon.
-- **Cada página confere no banco se o usuário ainda existe** (para que excluir um usuário corte o acesso na hora). É uma consulta pequena por página; se o sistema ficar lento no Neon, dá para trocar por uma verificação menos frequente.
+## Ainda em aberto (decisões da equipe, não erros)
+
 - **Os 2 alunos de teste do Neon têm CPFs fictícios.** Ao editar um deles, será preciso informar um CPF válido.
+- **As senhas dos 3 usuários iniciais** ainda são as de desenvolvimento (estão no README). Trocar em "Minha senha" antes do uso real.
+- **O instrutor vê todas as turmas**: o sistema não liga instrutor a turma.

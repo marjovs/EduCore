@@ -19,7 +19,7 @@
                     Nome da turma 
                 </label>
 
-                <input type="text" name="nome" required maxlength="100" placeholder="Ex.: Turma A" class="w-full border rounded-lg p-3">
+                <input type="text" name="nome" required maxlength="100" value="{{ valor_form('nome') }}" placeholder="Ex.: Turma A" class="w-full border rounded-lg p-3">
             </div>
 
             <div>
@@ -33,7 +33,7 @@
                     </option>
 
                     {% for curso in cursos %}
-                    <option value="{{ curso.id }}">
+                    <option value="{{ curso.id }}" {{ 'selected' if valor_form('curso_id') == curso.id|string }}>
                         {{ curso.nome }}
                     </option>
                     {% endfor %}
@@ -45,7 +45,7 @@
                     Ano
                 </label>
 
-                <input type="number" name="ano" required min="2000" max="2100" placeholder="2026" class="w-full border rounded-lg p-3">
+                <input type="number" name="ano" required min="2000" max="2100" placeholder="2026" value="{{ valor_form('ano') }}" class="w-full border rounded-lg p-3">
             </div>
 
             <div>
@@ -57,13 +57,13 @@
                     <option value="">
                         Selecione o turno
                     </option>
-                    <option value="Matutino">
+                    <option value="Matutino" {{ 'selected' if valor_form('turno') == 'Matutino' }}>
                         Matutino
                     </option>
-                    <option value="Vespertino">
+                    <option value="Vespertino" {{ 'selected' if valor_form('turno') == 'Vespertino' }}>
                         Vespertino
                     </option>
-                    <option value="Noturno">
+                    <option value="Noturno" {{ 'selected' if valor_form('turno') == 'Noturno' }}>
                         Noturno
                     </option>
                 </select>

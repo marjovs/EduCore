@@ -1,4 +1,4 @@
-"""Usuários do sistema: a coordenação cadastra, redefine senhas e exclui."""
+"""Usuários do sistema: a coordenação cadastra, redefine senhas, desativa e reativa."""
 from flask import Blueprint, flash, redirect, render_template, request, session, url_for
 
 from app.acesso import PERFIS, perfil_required
@@ -14,7 +14,7 @@ NOMES_PERFIS = {"secretaria": "Secretaria", "instrutor": "Instrutor", "coordenac
 @perfil_required("coordenacao")
 def listar():
     return render_template("coordenacao/usuarios/listar.html", usuarios=usuario_service.listar_usuarios(),
-                           nomes_perfis=NOMES_PERFIS)
+                           nomes_perfis=NOMES_PERFIS, esta_bloqueado=usuario_service.esta_bloqueado)
 
 
 @usuarios.route("/cadastrar", methods=["GET", "POST"])
@@ -66,18 +66,34 @@ def redefinir_senha(id):
     return tela()
 
 
-@usuarios.route("/excluir/<int:id>", methods=["POST"])
+@usuarios.route("/desativar/<int:id>", methods=["POST"])
 @perfil_required("coordenacao")
-def excluir(id):
+def desativar(id):
     usuario = usuario_service.buscar_usuario(id)
 
     def voltar():
         return redirect(url_for("usuarios.listar"))
 
-    falha = executar(lambda: usuario_service.excluir_usuario(usuario, session.get("usuario")),
-                     "Não foi possível excluir o usuário.", voltar)
+    falha = executar(lambda: usuario_service.desativar_usuario(usuario, session.get("usuario")),
+                     "Não foi possível desativar o usuário.", voltar)
     if falha:
         return falha
 
-    flash("Usuário excluído com sucesso!")
+    flash(f"Usuário {usuario.email} desativado com sucesso!")
+    return voltar()
+
+
+@usuarios.route("/reativar/<int:id>", methods=["POST"])
+@perfil_required("coordenacao")
+def reativar(id):
+    usuario = usuario_service.buscar_usuario(id)
+
+    def voltar():
+        return redirect(url_for("usuarios.listar"))
+
+    falha = executar(lambda: usuario_service.reativar_usuario(usuario), "Não foi possível reativar o usuário.", voltar)
+    if falha:
+        return falha
+
+    flash(f"Usuário {usuario.email} reativado com sucesso!")
     return voltar()

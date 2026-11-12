@@ -1,3 +1,4 @@
+
 {% extends "base.html" %}
 
 {% block titulo %}Minha senha{% endblock %}
@@ -18,37 +19,56 @@
         <form method="POST" class="space-y-4">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
+            <!-- Senha atual -->
             <div>
                 <label for="senha_atual" class="block font-medium mb-1">
                     Senha atual
                 </label>
 
-                <input type="password" id="senha_atual" name="senha_atual" required autocomplete="current-password"
-                    class="w-full border border-gray-300 rounded-lg p-3">
+                <div class="flex items-center border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-blue-500">
+                    <input type="password" id="senha_atual" name="senha_atual" required autocomplete="current-password" class="flex-1 min-w-0 px-4 py-3 border-0 outline-none focus:ring-0 focus:outline-none rounded-lg">
+
+                    <button type="button" onclick="alternarSenha('senha_atual', this)" class="px-3 text-gray-500 hover:text-gray-700" aria-label="Mostrar senha">
+                        <i class="fa-solid fa-eye"></i>
+                    </button>
+                </div>
             </div>
 
+            <!-- Nova senha -->
             <div>
                 <label for="senha" class="block font-medium mb-1">
                     Nova senha
                 </label>
 
-                <input type="password" id="senha" name="senha" required minlength="8" maxlength="128" autocomplete="new-password"
-                    class="w-full border border-gray-300 rounded-lg p-3">
+                <div class="flex items-center border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-blue-500">
+                    <input type="password" id="senha" name="senha" required minlength="8" maxlength="128" autocomplete="new-password"class="flex-1 min-w-0 px-4 py-3 border-0 outline-none focus:ring-0 focus:outline-none rounded-lg">
+                    
+                    <button type="button" onclick="alternarSenha('senha', this)" class="px-3 text-gray-500 hover:text-gray-700" aria-label="Mostrar senha">
+                        <i class="fa-solid fa-eye"></i>
+                    </button>
+                </div>
 
                 <p class="text-sm text-gray-500 mt-1">
                     Pelo menos 8 caracteres.
                 </p>
             </div>
 
+            <!-- Confirmar senha -->
             <div>
                 <label for="confirmacao" class="block font-medium mb-1">
                     Confirmar nova senha
                 </label>
 
-                <input type="password" id="confirmacao" name="confirmacao" required minlength="8" maxlength="128" autocomplete="new-password"
-                    class="w-full border border-gray-300 rounded-lg p-3">
+                <div class="flex items-center border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-blue-500">
+                    <input type="password" id="confirmacao" name="confirmacao" required minlength="8" maxlength="128" autocomplete="new-password" class="flex-1 min-w-0 px-4 py-3 border-0 outline-none focus:ring-0 focus:outline-none rounded-lg">
+
+                    <button type="button" onclick="alternarSenha('confirmacao', this)" class="px-3 text-gray-500 hover:text-gray-700" aria-label="Mostrar senha">
+                        <i class="fa-solid fa-eye"></i>
+                    </button>
+                </div>
             </div>
 
+            <!-- Botões -->
             <div class="flex gap-3 pt-2">
                 <button type="submit" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700">
                     Salvar nova senha
@@ -61,4 +81,21 @@
         </form>
     </div>
 </div>
+
+<script>
+    function alternarSenha(id, botao) {
+        const campo = document.getElementById(id);
+        const icone = botao.querySelector("i");
+
+        if (campo.type === "password") {
+            campo.type = "text";
+            icone.classList.replace("fa-eye", "fa-eye-slash");
+            botao.setAttribute("aria-label", "Ocultar senha");
+        } else {
+            campo.type = "password";
+            icone.classList.replace("fa-eye-slash", "fa-eye");
+            botao.setAttribute("aria-label", "Mostrar senha");
+        }
+    }
+</script>
 {% endblock %}
